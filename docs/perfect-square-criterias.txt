@@ -1,0 +1,51 @@
+1.
+
+A perfect square always ends with one of the following digits (0,1,4,5,6,9).
+
+2.
+
+If the last digit is 5,
+
+-The last 2 digits of the number will always be 25.
+
+-The last 3 digits of the number will always be 025, 225 or 625.
+
+(1225 might be a perfect square. But 3125 will never be a perfect square).
+
+-If the last 3 digits of the number is 625, then the last 4 digits of the number will always be 0625 or 5625.
+
+(15625 might be a perfect square. But 17625 will never be a perfect square).
+
+3.
+
+If the last digit is 6,then the 10’s digit is always an odd number.
+
+(1936 might be a perfect square,but 4066 will never be a perfect square).
+
+4.
+
+If the last digit is 1,4 or 9,then the 10’s digit is always an even number.
+
+(8281 might be a perfect square,but 6091 will never be a perfect square).
+
+5.
+
+If the last digit is 1 or 9,
+
+-If the 10’s digit is 2 or 6,then the digit in 100's place is always an odd number.
+
+( 361 might be a perfect square. But 621 will never be a perfect square).
+
+-If the 10’s digit is 0,4 or 8,then the digit in 100's place is always an even number.
+
+( 441 might be a perfect square,but 589 will never be a perfect square).
+
+6.
+
+Digital roots of a perfect square is always one of the following numbers (0,1,4,7,9).
+
+Digital roots of a number is found out by adding the digits of a number. If the sum is greater than 9, then the digits of the resultant number is added and so on until a unit digit remains.
+
+( The digital roots of 25 is 2+5=7. So it might be a perfect square.
+
+The digital roots of 161 is 1+6+1=8. So it is not a perfect square.)
