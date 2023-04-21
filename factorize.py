@@ -1,5 +1,6 @@
 import math
 import sys
+import sympy.ntheory as nt
 
 
 def digit_root(n: int):
@@ -16,6 +17,25 @@ def is_even(num: int):
         return True
     else:
         return False
+
+
+def jacobi(a: int, n: int):
+    assert (n > a > 0 and n % 2 == 1)
+    t = 1
+    while a != 0:
+        while a % 2 == 0:
+            a /= 2
+            r = n % 8
+            if r == 3 or r == 5:
+                t = -t
+        a, n = n, a
+        if a % 4 == n % 4 == 3:
+            t = -t
+        a %= n
+    if n == 1:
+        return t
+    else:
+        return 0
 
 
 def is_perfect_square(num: int):
@@ -49,6 +69,9 @@ def is_perfect_square(num: int):
             return 0
     if digit_root(num) not in (0, 1, 4, 7, 9):
         return 0
+    for i in (13, 29, 43, 61, 83, 97, 179, 257, 683, 1427, 2399, 3547, 6971, 7919):
+        if nt.legendre_symbol(num, i) == -1:
+            return 0
     num_sqrt = math.isqrt(num)
     if num_sqrt * num_sqrt == num:
         return num_sqrt
