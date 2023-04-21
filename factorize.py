@@ -108,7 +108,7 @@ def factorize(num: int):
 
 def main(argv: list):
     if len(argv) == 2:
-        print(f'Prime numbers are: {factorize(argv[1])} ')
+        print(f'Prime numbers are: {factorize(int(argv[1]))} ')
         sys.exit(0)
     else:
         print(f'Usage: {argv[0]} number')
