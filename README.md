@@ -1,5 +1,5 @@
 # fast-factorization
-Fast factorization of combined number that is a product of 2 primary numbers
+Fast factorization of a composit number that is a product of 2 prime numbers
 <<<<<<< HEAD
 =======
 ![Algorythm](./docs/fast-factorization.jpg?raw=true "Scheme of one-point and five-points models") 
