@@ -1,7 +1,9 @@
 import math
 import sys
 import sympy.ntheory as nt
+import logging
 
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 def digit_root(n: int):
     return (n - 1) % 9 + 1
@@ -39,10 +41,14 @@ def jacobi(a: int, n: int):
 
 
 def is_perfect_square(num: int):
+    logging.debug(f'Check if the {num} is perfect square')
     last_dig = last_digits(num, 1)
     last_2dig = last_digits(num, 2)
     last_3dig = last_digits(num, 3)
     last_4dig = last_digits(num, 4)
+    logging.debug(f'last digits are:'
+                  f'{str(last_dig), str(last_2dig), str(last_3dig), str(last_4dig)}')
+    logging.debug(f'Check if the {num} is perfect square by last numbers')
     if last_dig not in (0, 1, 4, 5, 6, 9):
         return 0
     if last_dig == 5:
@@ -70,37 +76,53 @@ def is_perfect_square(num: int):
     if digit_root(num) not in (0, 1, 4, 7, 9):
         return 0
     for i in (13, 29, 43, 61, 83, 97, 179, 257, 683, 1427, 2399, 3547, 6971, 7919):
+        logging.debug(f'Check if the {num} is perfect square by legendre symbol for {i}')
         if nt.legendre_symbol(num, i) == -1:
             return 0
+    logging.debug(f'Calculate square root of {num}')
     num_sqrt = math.isqrt(num)
     if num_sqrt * num_sqrt == num:
+        logging.debug(f'Calculated square root of {num} = it is num_sqrt')
         return num_sqrt
     else:
         return 0
 
 
 def factorize(num: int):
+    logging.debug(f's = {num}')
     s2 = pow(num, 2)
+    logging.debug(f's2 = {s2}')
     s4 = pow(s2, 2)
+    logging.debug(f's4 = {s4}')
     n = 0
     q4 = s2
     while q4 < s4:
         sqrt1 = is_perfect_square(s4 + pow(120 * n, 2))
+        logging.debug(f'Iteration number = {n}')
+        logging.debug(f'sqrt1 = {sqrt1}')
+        logging.debug(f'q4 = {q4}')
         if not sqrt1:
+            logging.debug(f'{sqrt1} is not perfect square')
             n += 1
             q4 += 120 * n
             continue
         else:
+            logging.debug(f'{sqrt1} is perfect square')
             q4 = 120 * n + sqrt1
+            logging.debug(f'q4 = {q4}')
             q2 = is_perfect_square(q4)
             if not q2:
+                logging.debug(f'q2 = {q2}')
                 q = is_perfect_square(q2)
                 if not q:
+                    logging.debug(f'q= {q}')
                     return q, num / q
                 else:
+                    logging.debug(f'{q4} is not perfect square')
                     n += 1
                     continue
             else:
+                logging.debug(f'{q2} is not perfect square')
                 n += 1
                 continue
     return num, 1
