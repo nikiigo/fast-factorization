@@ -1,9 +1,9 @@
 import sys
-from . import main
+import factorize
 
 rc = 1
 try:
-    main()
+    factorize.main(sys.argv)
     rc = 0
 except Exception as e:
     print('Error: %s' % e, file=sys.stderr)
