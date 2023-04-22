@@ -49,3 +49,11 @@ Digital roots of a number is found out by adding the digits of a number. If the 
 ( The digital roots of 25 is 2+5=7. So it might be a perfect square.
 
 The digital roots of 161 is 1+6+1=8. So it is not a perfect square.)
+
+7.
+
+legendre symbol is not equal -1
+
+9.
+
+final check via isqrt
