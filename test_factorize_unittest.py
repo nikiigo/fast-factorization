@@ -21,7 +21,7 @@ class TestFactorize(unittest.TestCase):
         self.assertFalse(factorize.is_even(36523))
 
     def test_is_perfect_square(self):
-        roots_dict = {82: 82*82, 453: 453*453, 894: 894*894, 578934526542: 578934526542*578934526542}
+        roots_dict = {82: 82 * 82, 453: 453 * 453, 894: 894 * 894, 578934526542: 578934526542 * 578934526542}
         roots_list = (6452627485, 5869707947462525421, 84857563655242423, 75748439393939249574636535)
         for num in roots_dict:
             self.assertEqual(factorize.is_perfect_square(roots_dict[num]), num)
@@ -30,6 +30,7 @@ class TestFactorize(unittest.TestCase):
 
     def test_factorize(self):
         self.assertEqual(True, False)  # add assertion here
+
 
 if __name__ == '__main__':
     unittest.main()
