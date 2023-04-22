@@ -3,7 +3,7 @@ import sys
 import sympy.ntheory as nt
 import logging
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logging.basicConfig(stream=sys.stdout, level=logging.WARNING)
 
 
 def digit_root(n: int):
@@ -108,16 +108,17 @@ def factorize(num: int):
             n += 1
             continue
         else:
-            logging.debug(f'{pow(120 * n, 2) + s4} is perfect square')
+            logging.debug(f'sqrt1 = {sqrt1}')
+            logging.warning(f'Iteration number = {n} of {n_max}')
             q4 = sqrt1 - 120 * n
-            logging.debug(f'q4 = {q4}')
             q2 = is_perfect_square(q4)
-            logging.debug(f'{q2} is q2')
             if q2:
                 logging.debug(f'q2 = {q2}')
+                logging.warning(f'Iteration number = {n} of {n_max}')
                 q = is_perfect_square(q2)
                 if q:
                     logging.debug(f'q= {q}')
+                    logging.warning(f'Iteration number = {n} of {n_max}')
                     if not num % q:
                         return q, int(num / q)
                     else:
