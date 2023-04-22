@@ -5,6 +5,7 @@ import logging
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
+
 def digit_root(n: int):
     return (n - 1) % 9 + 1
 
@@ -75,7 +76,7 @@ def is_perfect_square(num: int):
             return 0
     if digit_root(num) not in (0, 1, 4, 7, 9):
         return 0
-    for i in (13, 29, 43, 61, 83, 97, 179, 257, 683, 1427, 2399, 3547, 6971, 7919):
+    for i in (97, 179, 257, 683, 1427, 2399, 3547, 6971, 7919):
         logging.debug(f'Check if the {num} is perfect square by legendre symbol for {i}')
         if nt.legendre_symbol(num, i) == -1:
             return 0
@@ -95,20 +96,20 @@ def factorize(num: int):
     s4 = pow(s2, 2)
     logging.debug(f's4 = {s4}')
     n = 0
-    q4 = s2
-    while q4 < s4:
-        sqrt1 = is_perfect_square(s4 + pow(120 * n, 2))
-        logging.debug(f'Iteration number = {n}')
-        logging.debug(f'sqrt1 = {sqrt1}')
+    n_max = math.floor(s2 / (120 * math.isqrt(3)))
+    q4 = s2 
+    while n < n_max:
+        sqrt1 = is_perfect_square(pow(120 * n, 2) + s4)
+        logging.debug(f'Iteration number = {n} of {n_max}')
+        logging.debug(f'sqrt1 = sqrt({pow(120 * n, 2) + s4})')
         logging.debug(f'q4 = {q4}')
         if not sqrt1:
-            logging.debug(f'{sqrt1} is not perfect square')
+            logging.debug(f'{pow(120 * n, 2) + s4} is not perfect square')
             n += 1
-            q4 += 120 * n
             continue
         else:
-            logging.debug(f'{sqrt1} is perfect square')
-            q4 = 120 * n + sqrt1
+            logging.debug(f'{pow(120 * n, 2) + s4} is perfect square')
+            q4 = sqrt1 - 120 * n
             logging.debug(f'q4 = {q4}')
             q2 = is_perfect_square(q4)
             if not q2:
