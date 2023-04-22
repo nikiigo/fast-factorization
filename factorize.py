@@ -83,7 +83,7 @@ def is_perfect_square(num: int):
     logging.debug(f'Calculate square root of {num}')
     num_sqrt = math.isqrt(num)
     if num_sqrt * num_sqrt == num:
-        logging.debug(f'Calculated square root of {num} = it is num_sqrt')
+        logging.debug(f'Calculated square root of {num} = {num_sqrt} it is num_sqrt')
         return num_sqrt
     else:
         return 0
@@ -97,7 +97,7 @@ def factorize(num: int):
     logging.debug(f's4 = {s4}')
     n = 0
     n_max = math.floor(s2 / (120 * math.isqrt(3)))
-    q4 = s2 
+    q4 = s2
     while n < n_max:
         sqrt1 = is_perfect_square(pow(120 * n, 2) + s4)
         logging.debug(f'Iteration number = {n} of {n_max}')
@@ -112,12 +112,17 @@ def factorize(num: int):
             q4 = sqrt1 - 120 * n
             logging.debug(f'q4 = {q4}')
             q2 = is_perfect_square(q4)
-            if not q2:
+            logging.debug(f'{q2} is q2')
+            if q2:
                 logging.debug(f'q2 = {q2}')
                 q = is_perfect_square(q2)
-                if not q:
+                if q:
                     logging.debug(f'q= {q}')
-                    return q, num / q
+                    if not num % q:
+                        return q, int(num / q)
+                    else:
+                        n += 1
+                        continue
                 else:
                     logging.debug(f'{q4} is not perfect square')
                     n += 1
