@@ -12,7 +12,8 @@ If the last digit is 5,
 
 (1225 might be a perfect square. But 3125 will never be a perfect square).
 
--If the last 3 digits of the number is 625, then the last 4 digits of the number will always be 0625 or 5625.
+-If the last 3 digits of the number is 625, then the last 4 digits of the number
+will always be 0625 or 5625.
 
 (15625 might be a perfect square. But 17625 will never be a perfect square).
 
@@ -44,7 +45,8 @@ If the last digit is 1 or 9,
 
 Digital roots of a perfect square is always one of the following numbers (0,1,4,7,9).
 
-Digital roots of a number is found out by adding the digits of a number. If the sum is greater than 9, then the digits of the resultant number is added and so on until a unit digit remains.
+Digital roots of a number is found out by adding the digits of a number. If the sum is greater than 9,
+then the digits of the resultant number is added and so on until a unit digit remains.
 
 ( The digital roots of 25 is 2+5=7. So it might be a perfect square.
 
@@ -52,7 +54,8 @@ The digital roots of 161 is 1+6+1=8. So it is not a perfect square.)
 
 7.
 
-legendre symbol is not equal -1
+legendre symbol is not equal -1 (it should be tested on number of primes since if legendre symbol
+is equal 1 the number still could be not perfect square)
 
 9.
 
