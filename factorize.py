@@ -95,8 +95,10 @@ def factorize(num: int):
     logging.debug(f's2 = {s2}')
     s4 = pow(s2, 2)
     logging.debug(f's4 = {s4}')
-    n = 0
     n_max = math.floor(s2 / (120 * math.isqrt(3)))
+    n_min = num // 120
+    n = n_min + 3 - n_min % 3
+    logging.info(f'n_min = {n}, m_max {n_max}')
     q4 = s2
     while n < n_max:
         sqrt1 = is_perfect_square(pow(120 * n, 2) + s4)
@@ -105,7 +107,7 @@ def factorize(num: int):
         logging.debug(f'q4 = {q4}')
         if not sqrt1:
             logging.debug(f'{pow(120 * n, 2) + s4} is not perfect square')
-            n += 1
+            n += 3
             continue
         else:
             logging.debug(f'sqrt1 = {sqrt1}')
