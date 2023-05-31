@@ -96,7 +96,7 @@ def factorize(num: int):
     s4 = pow(s2, 2)
     logging.debug(f's4 = {s4}')
     n_max = math.floor(s2 / (120 * math.isqrt(3)))
-    n_min = num // 15 * math.isqrt(num)
+    n_min = num // 30 * math.isqrt(num)
     n = n_min + 3 - n_min % 3
     logging.info(f'n_min = {n}, m_max {n_max}')
     q4 = s2
