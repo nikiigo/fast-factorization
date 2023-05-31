@@ -1,7 +1,7 @@
 import math
-import sys
 import sympy.ntheory as nt
 import logging
+import sys
 
 logging.getLogger(__name__)
 
@@ -11,8 +11,11 @@ def digit_root(n: int):
 
 
 def last_digits(num: int, dig: int):
-    my_dig = int(str(num)[-dig])
-    return my_dig
+    try:
+        my_dig = int(str(num)[-dig])
+        return my_dig
+    except IndexError:
+        return None
 
 
 def is_even(num: int):
@@ -53,26 +56,26 @@ def is_perfect_square(num: int):
     if last_dig not in (0, 1, 4, 5, 6, 9):
         return 0
     if last_dig == 5:
-        if last_2dig == 2:
-            if last_3dig not in (0, 2, 6):
+        if last_2dig is not None and last_2dig == 2:
+            if last_3dig is not None and last_3dig not in (0, 2, 6):
                 return 0
-            if last_3dig == 6:
-                if last_4dig not in (0, 5):
+            if last_3dig is not None and last_3dig == 6:
+                if last_4dig is not None and last_4dig not in (0, 5):
                     return 0
     elif last_dig == 6:
-        if is_even(last_2dig):
+        if last_2dig is not None and is_even(last_2dig):
             return 0
     elif last_dig in (1, 9):
-        if not is_even(last_2dig):
+        if last_2dig is not None and not is_even(last_2dig):
             return 0
-        if last_2dig in (2, 6):
-            if is_even(last_3dig):
+        if last_2dig is not None and last_2dig in (2, 6):
+            if last_3dig is not None and is_even(last_3dig):
                 return 0
-        elif last_2dig in (0, 4, 8):
-            if not is_even(last_3dig):
+        elif last_2dig is not None and last_2dig in (0, 4, 8):
+            if last_3dig is not None and not is_even(last_3dig):
                 return 0
     elif last_dig == 4:
-        if not is_even(last_2dig):
+        if last_2dig is not None and not is_even(last_2dig):
             return 0
     if digit_root(num) not in (0, 1, 4, 7, 9):
         return 0
@@ -89,7 +92,7 @@ def is_perfect_square(num: int):
         return 0
 
 
-def factorize(num: int):
+def factorize(num: int, processes=1, proc_id=0):
     """logging.debug(f's = {num}')
     s2 = pow(num, 2)
     logging.debug(f's2 = {s2}')
@@ -136,8 +139,8 @@ def factorize(num: int):
                 continue
     return num, 1"""
     s = num
-    n_max = math.floor(math.isqrt(s))
-    n_min = 1
+    n_max = math.floor(math.floor(math.isqrt(s)) / processes * (proc_id + 1))
+    n_min = 1 + math.floor(math.isqrt(s) / processes * proc_id)
     n = n_max
     logging.info(f'n_min = {n_min}, m_max {n_max}')
     while n > n_min:
@@ -150,23 +153,37 @@ def factorize(num: int):
             continue
         else:
             logging.debug(f'sqrt1 = {sqrt1}')
-            logging.info(f'Iteration number = {n_max -n} of {n_max}')
+            logging.info(f'Iteration number = {n_max - n} of {n_max}')
             q = sqrt1 - n
             pmod = s % q
             if pmod:
                 logging.debug(f'q = {q}')
-                logging.debug(f'Iteration number = {n} of {n_max}')
+                logging.debug(f'Iteration number = {n_max - n} of {n_max}')
                 n += -1
                 continue
             else:
-                logging.debug(f'Iteration number = {n} of {n_max}')
+                logging.debug(f'Iteration number = {n_max - n} of {n_max}')
                 return q, int(s / q)
-    return num, 1
+    return None
 
 
 def main(argv: list):
+    import multiprocessing as mp
     if len(argv) == 2:
-        print(f'Prime numbers are: {factorize(int(argv[1]))} ')
+        cpu_to_use = 4
+        # start the process pool
+        prc = mp.Pool(cpu_to_use)
+        # submit tasks and collect results
+        args = [(int(argv[1]), cpu_to_use, i) for i in range(cpu_to_use)]
+        prc_results = prc.starmap(factorize, args)
+        prc.close()
+        prc.join()
+        # Combine results
+        results = ()
+        for result in prc_results:
+            if result is not None:
+                results = results + result
+        print(f'Prime numbers are: {results} ')
         sys.exit(0)
     else:
         print(f'Usage: {argv[0]} number')
@@ -174,5 +191,5 @@ def main(argv: list):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
     main(sys.argv)
