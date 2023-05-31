@@ -139,7 +139,7 @@ def factorize(num: int):
     n_max = math.floor(math.isqrt(s))
     n_min = 1
     n = n_max
-    logging.info(f'n_min = {n}, m_max {n_max}')
+    logging.info(f'n_min = {n_min}, m_max {n_max}')
     while n > n_min:
         sqrt1 = is_perfect_square(pow(n, 2) + s)
         logging.debug(f'Iteration number = {n} of {n_max}')
