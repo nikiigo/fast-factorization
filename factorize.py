@@ -138,25 +138,25 @@ def factorize(num: int):
     s = num
     n_max = math.floor(math.isqrt(s))
     n_min = 1
-    n = n_min
+    n = n_max
     logging.info(f'n_min = {n}, m_max {n_max}')
-    while n < n_max:
+    while n > n_min:
         sqrt1 = is_perfect_square(pow(n, 2) + s)
         logging.debug(f'Iteration number = {n} of {n_max}')
         logging.debug(f'sqrt1 = sqrt({pow(n, 2) + s})')
         if not sqrt1:
             logging.debug(f'{pow(n, 2) + s} is not perfect square')
-            n += 1
+            n += -1
             continue
         else:
             logging.debug(f'sqrt1 = {sqrt1}')
             logging.info(f'Iteration number = {n} of {n_max}')
-            q = sqrt1 + n
+            q = sqrt1 - n
             pmod = s % q
             if pmod:
                 logging.debug(f'q = {q}')
                 logging.debug(f'Iteration number = {n} of {n_max}')
-                n += 1
+                n += -1
                 continue
             else:
                 logging.debug(f'Iteration number = {n} of {n_max}')
@@ -174,5 +174,5 @@ def main(argv: list):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
     main(sys.argv)
