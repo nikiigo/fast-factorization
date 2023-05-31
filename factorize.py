@@ -142,7 +142,7 @@ def factorize(num: int):
     logging.info(f'n_min = {n_min}, m_max {n_max}')
     while n > n_min:
         sqrt1 = is_perfect_square(pow(n, 2) + s)
-        logging.debug(f'Iteration number = {n} of {n_max}')
+        logging.debug(f'Iteration number = {n_max - n} of {n_max}')
         logging.debug(f'sqrt1 = sqrt({pow(n, 2) + s})')
         if not sqrt1:
             logging.debug(f'{pow(n, 2) + s} is not perfect square')
@@ -150,7 +150,7 @@ def factorize(num: int):
             continue
         else:
             logging.debug(f'sqrt1 = {sqrt1}')
-            logging.info(f'Iteration number = {n} of {n_max}')
+            logging.info(f'Iteration number = {n_max -n} of {n_max}')
             q = sqrt1 - n
             pmod = s % q
             if pmod:
