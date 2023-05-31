@@ -2,8 +2,7 @@ import math
 import sympy.ntheory as nt
 import logging
 import sys
-
-logging.getLogger(__name__)
+from multiprocessing import Process, current_process
 
 
 def digit_root(n: int):
@@ -45,14 +44,15 @@ def jacobi(a: int, n: int):
 
 
 def is_perfect_square(num: int):
-    logging.debug(f'Check if the {num} is perfect square')
+    logger = logging.getLogger('PerfectSquare')
+    logger.debug(f'Check if the {num} is perfect square')
     last_dig = last_digits(num, 1)
     last_2dig = last_digits(num, 2)
     last_3dig = last_digits(num, 3)
     last_4dig = last_digits(num, 4)
-    logging.debug(f'last digits are:'
+    logger.debug(f'last digits are:'
                   f'{str(last_dig), str(last_2dig), str(last_3dig), str(last_4dig)}')
-    logging.debug(f'Check if the {num} is perfect square by last numbers')
+    logger.debug(f'Check if the {num} is perfect square by last numbers')
     if last_dig not in (0, 1, 4, 5, 6, 9):
         return 0
     if last_dig == 5:
@@ -80,19 +80,22 @@ def is_perfect_square(num: int):
     if digit_root(num) not in (0, 1, 4, 7, 9):
         return 0
     for i in (97, 179, 257, 683, 1427, 2399, 3547, 6971, 7919):
-        logging.debug(f'Check if the {num} is perfect square by legendre symbol for {i}')
+        logger.debug(f'Check if the {num} is perfect square by legendre symbol for {i}')
         if nt.legendre_symbol(num, i) == -1:
             return 0
-    logging.debug(f'Calculate square root of {num}')
+    logger.debug(f'Calculate square root of {num}')
     num_sqrt = math.isqrt(num)
     if num_sqrt * num_sqrt == num:
-        logging.debug(f'Calculated square root of {num} = {num_sqrt} it is num_sqrt')
+        logger.debug(f'Calculated square root of {num} = {num_sqrt} it is num_sqrt')
         return num_sqrt
     else:
         return 0
 
 
 def factorize(num: int, processes=1, proc_id=0):
+    if current_process().name != 'MainProcess':
+        logger = logging.getLogger('Factorization:' + str(proc_id))
+        logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     """logging.debug(f's = {num}')
     s2 = pow(num, 2)
     logging.debug(f's2 = {s2}')
@@ -142,27 +145,27 @@ def factorize(num: int, processes=1, proc_id=0):
     n_max = math.floor(math.floor(math.isqrt(s)) / processes * (proc_id + 1))
     n_min = 1 + math.floor(math.isqrt(s) / processes * proc_id)
     n = n_max
-    logging.info(f'n_min = {n_min}, m_max {n_max}')
-    while n > n_min:
+    logger.info(f'n_min = {n_min}, m_max {n_max}')
+    while n >= n_min:
         sqrt1 = is_perfect_square(pow(n, 2) + s)
-        logging.debug(f'Iteration number = {n_max - n} of {n_max}')
-        logging.debug(f'sqrt1 = sqrt({pow(n, 2) + s})')
+        logger.debug(f'Iteration number = {n_max + n_min - n} of {n_max}')
+        logger.debug(f'sqrt1 = sqrt({pow(n, 2) + s})')
         if not sqrt1:
-            logging.debug(f'{pow(n, 2) + s} is not perfect square')
+            logger.debug(f'{pow(n, 2) + s} is not perfect square')
             n += -1
             continue
         else:
-            logging.debug(f'sqrt1 = {sqrt1}')
-            logging.info(f'Iteration number = {n_max - n} of {n_max}')
+            logger.debug(f'sqrt1 = {sqrt1}')
+            logger.info(f'Iteration number = {n_max + n_min - n} of {n_max}')
             q = sqrt1 - n
             pmod = s % q
             if pmod:
-                logging.debug(f'q = {q}')
-                logging.debug(f'Iteration number = {n_max - n} of {n_max}')
+                logger.debug(f'q = {q}')
+                logger.debug(f'Iteration number = {n_max + n_min - n} of {n_max}')
                 n += -1
                 continue
             else:
-                logging.debug(f'Iteration number = {n_max - n} of {n_max}')
+                logger.debug(f'Iteration number = {n_max + n_min - n} of {n_max}')
                 return q, int(s / q)
     return None
 
@@ -190,6 +193,7 @@ def main(argv: list):
         sys.exit(-1)
 
 
-if __name__ == "__main__":
-    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+if __name__ != "__main__":
+    pass
+else:
     main(sys.argv)
