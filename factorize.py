@@ -107,7 +107,7 @@ def factorize(num: int):
         logging.debug(f'q4 = {q4}')
         if not sqrt1:
             logging.debug(f'{pow(120 * n, 2) + s4} is not perfect square')
-            n += 3
+            n += 1
             continue
         else:
             logging.debug(f'sqrt1 = {sqrt1}')
