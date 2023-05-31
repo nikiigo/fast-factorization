@@ -90,7 +90,7 @@ def is_perfect_square(num: int):
 
 
 def factorize(num: int):
-    logging.debug(f's = {num}')
+    """logging.debug(f's = {num}')
     s2 = pow(num, 2)
     logging.debug(f's2 = {s2}')
     s4 = pow(s2, 2)
@@ -134,6 +134,33 @@ def factorize(num: int):
                 logging.debug(f'{q2} is not perfect square')
                 n += 1
                 continue
+    return num, 1"""
+    s = num
+    n_max = math.floor(math.isqrt(s))
+    n_min = 1
+    n = n_min
+    logging.info(f'n_min = {n}, m_max {n_max}')
+    while n < n_max:
+        sqrt1 = is_perfect_square(pow(n, 2) + s)
+        logging.debug(f'Iteration number = {n} of {n_max}')
+        logging.debug(f'sqrt1 = sqrt({pow(n, 2) + s})')
+        if not sqrt1:
+            logging.debug(f'{pow(n, 2) + s} is not perfect square')
+            n += 1
+            continue
+        else:
+            logging.debug(f'sqrt1 = {sqrt1}')
+            logging.info(f'Iteration number = {n} of {n_max}')
+            q = sqrt1 + n
+            pmod = s % q
+            if pmod:
+                logging.debug(f'q = {q}')
+                logging.debug(f'Iteration number = {n} of {n_max}')
+                n += 1
+                continue
+            else:
+                logging.debug(f'Iteration number = {n} of {n_max}')
+                return q, int(s / q)
     return num, 1
 
 
