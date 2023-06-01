@@ -145,7 +145,7 @@ def factorize(num: int, processes=1, proc_id=0):
     return num, 1"""
     s = num
     s4 = math.isqrt(math.isqrt(s))
-    n_max = math.floor(math.floor(s4 / processes * (proc_id + 1)))
+    n_max = math.floor(s4 / processes * (proc_id + 1))
     n_min = 1 + math.floor(s4 / processes * proc_id)
     n = n_max
     logger.info(f'n_min = {n_min}, m_max {n_max}')
