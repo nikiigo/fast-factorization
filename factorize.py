@@ -2,7 +2,7 @@ import math
 import sympy.ntheory as nt
 import logging
 import sys
-from multiprocessing import Process, current_process
+from multiprocessing import current_process
 
 
 def digit_root(n: int):
@@ -51,7 +51,7 @@ def is_perfect_square(num: int):
     last_3dig = last_digits(num, 3)
     last_4dig = last_digits(num, 4)
     logger.debug(f'last digits are:'
-                  f'{str(last_dig), str(last_2dig), str(last_3dig), str(last_4dig)}')
+                 f'{str(last_dig), str(last_2dig), str(last_3dig), str(last_4dig)}')
     logger.debug(f'Check if the {num} is perfect square by last numbers')
     if last_dig not in (0, 1, 4, 5, 6, 9):
         return 0
@@ -96,6 +96,8 @@ def factorize(num: int, processes=1, proc_id=0):
     if current_process().name != 'MainProcess':
         logger = logging.getLogger('Factorization:' + str(proc_id))
         logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    else:
+        logger = logging.getLogger()
     """logging.debug(f's = {num}')
     s2 = pow(num, 2)
     logging.debug(f's2 = {s2}')
@@ -172,8 +174,10 @@ def factorize(num: int, processes=1, proc_id=0):
 
 def main(argv: list):
     import multiprocessing as mp
+    import time
     if len(argv) == 2:
-        cpu_to_use = 4
+        st = time.time()
+        cpu_to_use = 6
         # start the process pool
         prc = mp.Pool(cpu_to_use)
         # submit tasks and collect results
@@ -186,7 +190,10 @@ def main(argv: list):
         for result in prc_results:
             if result is not None:
                 results = results + result
+        et = time.time() - st
+        time_format = time.strftime("%H:%M:%S", time.gmtime(et))
         print(f'Prime numbers are: {results} ')
+        print("Elapsed time hh:mm:ss", time_format)
         sys.exit(0)
     else:
         print(f'Usage: {argv[0]} number')
