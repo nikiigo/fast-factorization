@@ -4,8 +4,6 @@ import logging
 import sys
 from multiprocessing import current_process
 
-speculation = 10
-
 
 def digit_root(n: int):
     return (n - 1) % 9 + 1
@@ -146,8 +144,9 @@ def factorize(num: int, processes=1, proc_id=0):
                 continue
     return num, 1"""
     s = num
-    n_max = math.floor(math.floor(math.isqrt(s)) / (2 * speculation * processes) * (proc_id + 1))
-    n_min = 1 + math.floor(math.isqrt(s) / (2 * speculation * processes) * proc_id)
+    s4 = math.isqrt(math.isqrt(s))
+    n_max = math.floor(math.floor(s4 / processes * (proc_id + 1)))
+    n_min = 1 + math.floor(s4 / processes * proc_id)
     n = n_max
     logger.info(f'n_min = {n_min}, m_max {n_max}')
     while n >= n_min:
