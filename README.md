@@ -116,6 +116,43 @@ python benchmark.py --external cado-nfs --external-command /path/to/cado-nfs.py
 python benchmark.py --external cado-nfs --external-command "python /path/to/cado-nfs.py"
 ```
 
+## Performance Comparison
+
+The table below compares the PyPI package `fast-factorization==0.1.0` with
+SymPy `factorint` from `sympy==1.14.0`. Times are medians of 7 runs on Python
+3.14.3, Linux x86_64, Intel Core i5-8350U. Lower is better. These are local
+benchmark results, not general performance guarantees.
+
+| Case | fast-factorization | SymPy `factorint` | Result |
+| --- | ---: | ---: | --- |
+| small semiprime | 0.0038 ms | 0.0038 ms | same |
+| small trial factor | 0.0255 ms | 0.0469 ms | fast-factorization faster |
+| close semiprime | 0.2150 ms | 0.1342 ms | SymPy faster |
+| Project Euler 3 | 0.0969 ms | 0.0905 ms | about equal |
+| p-1 friendly | 6.4198 ms | 0.1195 ms | SymPy much faster |
+| rho semiprime | 8.9985 ms | 0.2068 ms | SymPy much faster |
+| perfect square | 0.0746 ms | 0.1859 ms | fast-factorization faster |
+| prime input | 0.0111 ms | 0.0155 ms | fast-factorization faster |
+| big close semiprime | 2.8214 ms | 0.2220 ms | SymPy faster |
+
+With the optional `gmpy2` backend installed:
+
+| Case | fast-factorization + `gmpy2` | SymPy `factorint` | Result |
+| --- | ---: | ---: | --- |
+| small semiprime | 0.0038 ms | 0.0039 ms | same |
+| small trial factor | 0.0184 ms | 0.0451 ms | fast-factorization faster |
+| close semiprime | 0.1744 ms | 0.1398 ms | SymPy slightly faster |
+| Project Euler 3 | 0.1608 ms | 0.0799 ms | SymPy faster |
+| p-1 friendly | 1.5618 ms | 0.1053 ms | SymPy much faster |
+| rho semiprime | 5.5338 ms | 0.1210 ms | SymPy much faster |
+| perfect square | 0.0446 ms | 0.1177 ms | fast-factorization faster |
+| prime input | 0.0101 ms | 0.0186 ms | fast-factorization faster |
+| big close semiprime | 0.5950 ms | 0.1917 ms | SymPy faster |
+
+This package is competitive on simple educational cases such as small factors,
+perfect squares, and prime screening. SymPy is much stronger for general-purpose
+integer factorization, especially Pollard-heavy cases.
+
 ## Practice Numbers
 
 The repo includes public and synthetic practice numbers in `fast_factorization/challenge_numbers.py`:
