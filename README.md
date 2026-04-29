@@ -13,8 +13,6 @@ For larger integers, install the optional native arithmetic backend:
 python -m pip install ".[fast]"
 ```
 
-![Algorithm](./docs/fast-factorization.jpg?raw=true "Scheme of one-point and five-points models")
-
 ## Usage
 
 ```bash
