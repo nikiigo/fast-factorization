@@ -130,6 +130,9 @@ import fast_factorization
 
 factors = fast_factorization.factorize(91)
 print(factors)  # (7, 13)
+
+print(fast_factorization.factorize(100))  # (2, 2, 5, 5)
+print(fast_factorization.factor_pair(100))  # (2, 50)
 ```
 
 `fast_factorization.factorize(n)` returns a sorted tuple of recursively
@@ -138,3 +141,7 @@ not factored within the configured search limits.
 
 Use `fast_factorization.factor_pair(n)` when you only want one non-trivial
 split.
+
+Lower-level helpers such as `digit_root()` and `jacobi()` remain available from
+`fast_factorization.factorize` for compatibility, but they are not exported from
+the top-level package API.

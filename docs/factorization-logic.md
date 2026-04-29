@@ -172,6 +172,9 @@ returns a sorted tuple. For example, factoring `100` returns:
 
 Prime and probable-prime inputs return a one-item tuple, such as `(97,)`.
 
+If any recursive subfactor cannot be split within the configured search limits,
+`factorize(n)` returns `None` rather than returning a partial factorization.
+
 ## Scope
 
 This project is designed for educational factorization and medium-sized

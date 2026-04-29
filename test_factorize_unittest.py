@@ -5,6 +5,7 @@ import time
 import unittest
 
 import benchmark
+import fast_factorization
 from fast_factorization import challenge_numbers
 
 factorize = importlib.import_module("fast_factorization.factorize")
@@ -85,6 +86,26 @@ class TestFactorize(unittest.TestCase):
                 rho_max_steps=1,
             )
         )
+
+    def test_factorize_returns_none_for_unfactored_residual(self):
+        number = 2 * challenge_numbers.PRACTICAL_RHO_SEMIPRIME
+        self.assertIsNone(
+            factorize.factorize(
+                number,
+                fermat_steps=0,
+                pm1_bound=0,
+                rho_attempts=1,
+                rho_max_steps=1,
+            )
+        )
+
+    def test_public_factorize_uses_parallel_path(self):
+        self.assertEqual(factorize.factorize(100, processes=2), (2, 2, 5, 5))
+
+    def test_top_level_package_exports_current_api(self):
+        self.assertEqual(fast_factorization.factorize(100), (2, 2, 5, 5))
+        self.assertEqual(fast_factorization.factor_pair(100), (2, 50))
+        self.assertFalse(hasattr(fast_factorization, "digit_root"))
 
     def test_factorize_even_composite(self):
         self.assertEqual(factorize.factor_pair(100), (2, 50))

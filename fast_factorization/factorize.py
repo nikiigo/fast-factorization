@@ -387,9 +387,8 @@ def _factorize_recursive(num: int, kwargs: dict):
     for part in pair:
         subfactors = _factorize_recursive(part, kwargs)
         if subfactors is None:
-            factors.append(part)
-        else:
-            factors.extend(subfactors)
+            return None
+        factors.extend(subfactors)
     return tuple(sorted(factors))
 
 
@@ -415,6 +414,15 @@ def factorize(
         "rho_attempts": rho_attempts,
         "rho_max_steps": rho_max_steps,
     }
+    if processes > 1:
+        return _factorize_parallel_recursive(
+            num,
+            processes,
+            fermat_steps=fermat_steps,
+            pm1_bound=pm1_bound,
+            rho_attempts=rho_attempts,
+            rho_max_steps=rho_max_steps,
+        )
     return _factorize_recursive(num, kwargs)
 
 
@@ -554,9 +562,8 @@ def _factorize_parallel_recursive(
             rho_max_steps=rho_max_steps,
         )
         if subfactors is None:
-            factors.append(part)
-        else:
-            factors.extend(subfactors)
+            return None
+        factors.extend(subfactors)
     return tuple(sorted(factors))
 
 
