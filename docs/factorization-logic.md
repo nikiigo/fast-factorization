@@ -7,8 +7,9 @@ checks. The internal `factor_pair()` helper finds one non-trivial split:
 (divisor, n // divisor)
 ```
 
-The public `factorize()` function recursively factors both returned values and
-returns a sorted tuple of discovered factors.
+The public `factorize()` function checks both returned values. Prime values are
+accepted immediately, and composite values are recursively factored until a
+sorted tuple of discovered factors is produced.
 
 If no factorization is found, `factorize()` returns `None`.
 
@@ -188,8 +189,9 @@ and falls back to one process.
 
 The returned pair is sorted in ascending order.
 
-`factorize(n)` recursively factors both values returned by `factor_pair()` and
-returns a sorted tuple. For example, factoring `100` returns:
+`factorize(n)` checks both values returned by `factor_pair()`. Prime values are
+accepted immediately, and composite values are recursively factored. For
+example, factoring `100` returns:
 
 ```python
 (2, 2, 5, 5)

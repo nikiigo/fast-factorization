@@ -385,6 +385,9 @@ def _factorize_recursive(num: int, kwargs: dict):
 
     factors = []
     for part in pair:
+        if is_prime(part):
+            factors.append(part)
+            continue
         subfactors = _factorize_recursive(part, kwargs)
         if subfactors is None:
             return None
@@ -553,6 +556,9 @@ def _factorize_parallel_recursive(
 
     factors = []
     for part in pair:
+        if is_prime(part):
+            factors.append(part)
+            continue
         subfactors = _factorize_parallel_recursive(
             part,
             processes,
