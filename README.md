@@ -17,7 +17,7 @@ python -m pip install ".[fast]"
 ## Usage
 
 ```bash
-python factorize.py 10000015400005913
+python -m fast_factorization 10000015400005913
 ```
 
 Example output:
@@ -31,27 +31,27 @@ Elapsed time hh:mm:ss 00:00:00
 Use multiple workers when a factor is not found quickly:
 
 ```bash
-python factorize.py --processes 4 10000015400005913
+python -m fast_factorization --processes 4 10000015400005913
 ```
 
 Limit or disable the Fermat close-factor pre-pass:
 
 ```bash
-python factorize.py --fermat-steps 0 10000015400005913
+python -m fast_factorization --fermat-steps 0 10000015400005913
 ```
 
 Tune or disable Pollard p-1:
 
 ```bash
-python factorize.py --pm1-bound 50000 10009000070063
-python factorize.py --pm1-bound 0 10009000070063
+python -m fast_factorization --pm1-bound 50000 10009000070063
+python -m fast_factorization --pm1-bound 0 10009000070063
 ```
 
 Tune or disable Pollard Rho retry limits:
 
 ```bash
-python factorize.py --rho-attempts 200 --rho-max-steps 1000000 10000015400005913
-python factorize.py --rho-attempts 0 10000015400005913
+python -m fast_factorization --rho-attempts 200 --rho-max-steps 1000000 10000015400005913
+python -m fast_factorization --rho-attempts 0 10000015400005913
 ```
 
 ## Tests
@@ -101,7 +101,7 @@ python benchmark.py --external cado-nfs --external-command "python /path/to/cado
 
 ## Practice Numbers
 
-The repo includes public and synthetic practice numbers in `challenge_numbers.py`:
+The repo includes public and synthetic practice numbers in `fast_factorization/challenge_numbers.py`:
 
 - Project Euler 3: `600851475143`
 - Pollard p-1 friendly semiprime: `10009 * 1000000007`
@@ -123,12 +123,12 @@ challenge numbers.
 ## API
 
 ```python
-import factorize
+import fast_factorization
 
-factors = factorize.factorize(91)
+factors = fast_factorization.factorize(91)
 print(factors)  # (7, 13)
 ```
 
-`factorize.factorize(n)` returns a two-item tuple for a found composite split.
+`fast_factorization.factorize(n)` returns a two-item tuple for a found composite split.
 It returns `None` for invalid input, prime/probable-prime input, or composites
 that were not factored within the configured search limits.

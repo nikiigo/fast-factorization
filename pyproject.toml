@@ -11,10 +11,10 @@ requires-python = ">=3.14"
 license = {text = "MIT"}
 
 [project.scripts]
-fast-factorization = "factorize:main"
+fast-factorization = "fast_factorization.factorize:main"
 
 [project.optional-dependencies]
 fast = ["gmpy2>=2.1"]
 
 [tool.setuptools]
-py-modules = ["factorize"]
+packages = ["fast_factorization"]

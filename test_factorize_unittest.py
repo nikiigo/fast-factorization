@@ -1,11 +1,13 @@
+import importlib
 import math
 import os
 import time
 import unittest
 
-import challenge_numbers
 import benchmark
-import factorize
+from fast_factorization import challenge_numbers
+
+factorize = importlib.import_module("fast_factorization.factorize")
 
 
 class TestFactorize(unittest.TestCase):

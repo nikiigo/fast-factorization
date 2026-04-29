@@ -1,10 +1,11 @@
 import argparse
+import importlib
 import math
 import random
 import statistics
 import time
 
-import factorize
+factorize = importlib.import_module("fast_factorization.factorize")
 
 
 LEGENDRE_PRIMES = (97, 179, 257, 683, 1427, 2399, 3547, 6971, 7919)

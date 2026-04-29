@@ -1,11 +1,13 @@
 import argparse
+import importlib
 import shlex
 import shutil
 import subprocess
 import time
 
-import challenge_numbers
-import factorize
+from fast_factorization import challenge_numbers
+
+factorize = importlib.import_module("fast_factorization.factorize")
 
 
 CASES = {
