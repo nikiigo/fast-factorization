@@ -149,9 +149,25 @@ With the optional `gmpy2` backend installed:
 | prime input | 0.0101 ms | 0.0186 ms | fast-factorization faster |
 | big close semiprime | 0.5950 ms | 0.1917 ms | SymPy faster |
 
+With the optional `gmpy2` backend and `processes=4`:
+
+| Case | fast-factorization `processes=4` | SymPy `factorint` | Result |
+| --- | ---: | ---: | --- |
+| small semiprime | 0.0041 ms | 0.0041 ms | same |
+| small trial factor | 0.0222 ms | 0.0538 ms | fast-factorization faster |
+| close semiprime | 0.1984 ms | 0.1229 ms | SymPy faster |
+| Project Euler 3 | 0.0902 ms | 0.0895 ms | about equal |
+| p-1 friendly | 1.7888 ms | 0.1185 ms | SymPy much faster |
+| rho semiprime | 26.8930 ms | 0.1212 ms | SymPy much faster |
+| perfect square | 0.0198 ms | 0.1177 ms | fast-factorization faster |
+| prime input | 0.0096 ms | 0.0176 ms | fast-factorization faster |
+| big close semiprime | 0.5381 ms | 0.1896 ms | SymPy faster |
+
 This package is competitive on simple educational cases such as small factors,
 perfect squares, and prime screening. SymPy is much stronger for general-purpose
-integer factorization, especially Pollard-heavy cases.
+integer factorization, especially Pollard-heavy cases. The `processes` option
+only parallelizes the Pollard Rho stage, so it can be slower on small examples
+where multiprocessing startup overhead dominates the actual factorization work.
 
 ## Practice Numbers
 
