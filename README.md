@@ -105,6 +105,13 @@ Compare the current perfect-square check against the old digit/filter approach:
 python benchmark_square_checks.py
 ```
 
+Compare package performance against SymPy and refresh the README table:
+
+```bash
+python -m pip install sympy
+python benchmark_compare.py --update-readme
+```
+
 Include a larger synthetic close-prime semiprime:
 
 ```bash
@@ -128,77 +135,63 @@ python benchmark.py --external cado-nfs --external-command "python /path/to/cado
 
 ## Performance Comparison
 
-The table below compares the PyPI package `fast-factorization==0.1.0` with
-SymPy `factorint` from `sympy==1.14.0`. Times are medians of 7 runs on Python
-3.14.3, Linux x86_64, Intel Core i5-8350U. Lower is better. These are local
-benchmark results, not general performance guarantees.
+The table below compares the current `fast-factorization` checkout with
+SymPy `factorint` from `sympy==1.14.0`. Times are medians of
+7 runs on Python 3.14.3, Linux x86_64, Intel(R) Core(TM) i5-8350U CPU @ 1.70GHz.
+Lower is better. These are local benchmark results, not general
+performance guarantees.
 
-The multiprocessing strategy results below were measured from the current local
-development version after `0.1.0`.
+Optional `gmpy2` backend: `2.3.0`.
+
+Single-process factorization:
 
 | Case | fast-factorization | SymPy `factorint` | Result |
 | --- | ---: | ---: | --- |
-| small semiprime | 0.0038 ms | 0.0038 ms | same |
-| small trial factor | 0.0255 ms | 0.0469 ms | fast-factorization faster |
-| close semiprime | 0.2150 ms | 0.1342 ms | SymPy faster |
-| Project Euler 3 | 0.0969 ms | 0.0905 ms | about equal |
-| p-1 friendly | 6.4198 ms | 0.1195 ms | SymPy much faster |
-| rho semiprime | 8.9985 ms | 0.2068 ms | SymPy much faster |
-| perfect square | 0.0746 ms | 0.1859 ms | fast-factorization faster |
-| prime input | 0.0111 ms | 0.0155 ms | fast-factorization faster |
-| big close semiprime | 2.8214 ms | 0.2220 ms | SymPy faster |
+| small semiprime | 0.0043 ms | 0.0044 ms | about equal |
+| small trial factor | 0.0212 ms | 0.0531 ms | fast-factorization faster |
+| close semiprime | 0.1934 ms | 0.1388 ms | SymPy faster |
+| Project Euler 3 | 0.1030 ms | 0.2483 ms | fast-factorization faster |
+| p-1 friendly | 0.9277 ms | 0.1335 ms | SymPy faster |
+| rho semiprime | 4.2366 ms | 0.1133 ms | SymPy much faster |
+| perfect square | 0.0174 ms | 0.1178 ms | fast-factorization faster |
+| prime input | 0.0088 ms | 0.0173 ms | fast-factorization faster |
+| big close semiprime | 0.5122 ms | 0.1796 ms | SymPy faster |
 
-With the optional `gmpy2` backend installed:
-
-| Case | fast-factorization + `gmpy2` | SymPy `factorint` | Result |
-| --- | ---: | ---: | --- |
-| small semiprime | 0.0042 ms | 0.0040 ms | same |
-| small trial factor | 0.0209 ms | 0.0535 ms | fast-factorization faster |
-| close semiprime | 0.1904 ms | 0.1284 ms | SymPy faster |
-| Project Euler 3 | 0.1012 ms | 0.0889 ms | SymPy slightly faster |
-| p-1 friendly | 0.8706 ms | 0.1272 ms | SymPy faster |
-| rho semiprime | 4.0325 ms | 0.1069 ms | SymPy much faster |
-| perfect square | 0.0166 ms | 0.1023 ms | fast-factorization faster |
-| prime input | 0.0274 ms | 0.0153 ms | SymPy faster |
-| big close semiprime | 0.4655 ms | 0.1954 ms | SymPy faster |
-
-With the optional `gmpy2` backend and `processes=4` using the default `rho`
-strategy:
+With `processes=4, strategy="rho"`:
 
 | Case | fast-factorization `processes=4` | SymPy `factorint` | Result |
 | --- | ---: | ---: | --- |
-| small semiprime | 0.0034 ms | 0.0027 ms | SymPy slightly faster |
-| small trial factor | 0.0179 ms | 0.0483 ms | fast-factorization faster |
-| close semiprime | 0.1815 ms | 0.1077 ms | SymPy faster |
-| Project Euler 3 | 0.0831 ms | 0.0764 ms | SymPy slightly faster |
-| p-1 friendly | 0.7358 ms | 0.1065 ms | SymPy faster |
-| rho semiprime | 26.5191 ms | 0.2188 ms | SymPy much faster |
-| perfect square | 0.0341 ms | 0.2274 ms | fast-factorization faster |
-| prime input | 0.0175 ms | 0.0331 ms | fast-factorization faster |
-| big close semiprime | 0.7076 ms | 0.2764 ms | SymPy faster |
+| small semiprime | 0.0036 ms | 0.0025 ms | SymPy faster |
+| small trial factor | 0.0182 ms | 0.0500 ms | fast-factorization faster |
+| close semiprime | 0.1710 ms | 0.1547 ms | about equal |
+| Project Euler 3 | 0.0841 ms | 0.0799 ms | about equal |
+| p-1 friendly | 0.7385 ms | 0.1050 ms | SymPy faster |
+| rho semiprime | 26.5135 ms | 0.1239 ms | SymPy much faster |
+| perfect square | 0.0194 ms | 0.1196 ms | fast-factorization faster |
+| prime input | 0.0095 ms | 0.0177 ms | fast-factorization faster |
+| big close semiprime | 0.5359 ms | 0.2015 ms | SymPy faster |
 
-With the optional `gmpy2` backend and `processes=4 --strategy methods`:
+With `processes=4, strategy="methods"`:
 
 | Case | fast-factorization `strategy=methods` | SymPy `factorint` | Result |
 | --- | ---: | ---: | --- |
-| small semiprime | 0.0062 ms | 0.0048 ms | SymPy slightly faster |
-| small trial factor | 0.0317 ms | 0.0945 ms | fast-factorization faster |
-| close semiprime | 19.0218 ms | 0.1211 ms | SymPy much faster |
-| Project Euler 3 | 0.0948 ms | 0.0861 ms | SymPy slightly faster |
-| p-1 friendly | 21.8939 ms | 0.1626 ms | SymPy much faster |
-| rho semiprime | 22.6626 ms | 0.2810 ms | SymPy much faster |
-| perfect square | 0.0196 ms | 0.1196 ms | fast-factorization faster |
-| prime input | 0.0101 ms | 0.0176 ms | fast-factorization faster |
-| big close semiprime | 18.9466 ms | 0.2012 ms | SymPy much faster |
+| small semiprime | 0.0038 ms | 0.0029 ms | SymPy faster |
+| small trial factor | 0.0198 ms | 0.0536 ms | fast-factorization faster |
+| close semiprime | 20.3841 ms | 0.1556 ms | SymPy much faster |
+| Project Euler 3 | 0.1041 ms | 0.1513 ms | fast-factorization faster |
+| p-1 friendly | 22.5737 ms | 0.2629 ms | SymPy much faster |
+| rho semiprime | 25.8656 ms | 0.2485 ms | SymPy much faster |
+| perfect square | 0.0365 ms | 0.1332 ms | fast-factorization faster |
+| prime input | 0.0114 ms | 0.0334 ms | fast-factorization faster |
+| big close semiprime | 19.9369 ms | 0.2017 ms | SymPy much faster |
 
 This package is competitive on simple educational cases such as small factors,
 perfect squares, and prime screening. SymPy is much stronger for general-purpose
-integer factorization, especially Pollard-heavy cases. The `processes` option
-uses the default `rho` strategy unless `--strategy methods` is supplied. For
-small examples, multiprocessing startup overhead can dominate the actual
-factorization work. The `methods` strategy is experimental and is intended only
-for harder searches where Fermat, Pollard p-1, and Pollard Rho each have enough
-work to justify running in separate worker processes.
+integer factorization, especially Pollard-heavy cases. For small examples,
+multiprocessing startup overhead can dominate the actual factorization work.
+The `methods` strategy is experimental and is intended only for harder searches
+where Fermat, Pollard p-1, and Pollard Rho each have enough work to justify
+running in separate worker processes.
 
 ## Practice Numbers
 

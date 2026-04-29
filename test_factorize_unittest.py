@@ -5,6 +5,7 @@ import time
 import unittest
 
 import benchmark
+import benchmark_compare
 import fast_factorization
 from fast_factorization import challenge_numbers
 
@@ -197,6 +198,14 @@ class TestFactorize(unittest.TestCase):
         self.assertEqual(
             benchmark._find_external_command("cado-nfs", "python /tmp/cado-nfs.py"),
             ["python", "/tmp/cado-nfs.py"],
+        )
+
+    def test_readme_performance_section_replacement(self):
+        readme = "intro\n## Performance Comparison\nold\n## Practice Numbers\nrest\n"
+        section = "## Performance Comparison\nnew\n"
+        self.assertEqual(
+            benchmark_compare.replace_readme_section(readme, section),
+            "intro\n## Performance Comparison\nnew\n\n## Practice Numbers\nrest\n",
         )
 
     def test_factorize_project_euler_3_number(self):

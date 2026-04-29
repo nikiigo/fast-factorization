@@ -2,6 +2,7 @@ include README.md
 include LICENSE
 include requirements.txt
 include benchmark.py
+include benchmark_compare.py
 include benchmark_square_checks.py
 include test_factorize_unittest.py
 recursive-include docs *.md *.txt
