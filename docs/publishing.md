@@ -32,7 +32,7 @@ is not expected to factor RSA challenge numbers quickly.
 
    ```bash
    python -m venv /tmp/fast-factorization-publish-test
-   /tmp/fast-factorization-publish-test/bin/python -m pip install dist/fast_factorization-0.1.0-py3-none-any.whl
+   /tmp/fast-factorization-publish-test/bin/python -m pip install dist/fast_factorization-<version>-py3-none-any.whl
    /tmp/fast-factorization-publish-test/bin/fast-factorization 100
    ```
 
@@ -75,8 +75,8 @@ without review.
 Then publish by pushing a version tag, for example:
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+git tag v<version>
+git push origin v<version>
 ```
 
 The workflow also supports manual PyPI publishing with `target=pypi`, but the
