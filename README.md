@@ -1,6 +1,7 @@
 # fast-factorization
 
-Factor composite integers into recursively discovered factors.
+Educational integer factorization toolkit with a CLI, Python API, benchmarks,
+and reference challenge numbers.
 
 The implementation uses trial division, perfect-square checks, Fermat for close
 factors, Pollard p-1, Miller-Rabin primality checks, and Pollard Rho. Miller-
@@ -8,10 +9,19 @@ Rabin is deterministic below `2**64` and used as a probable-prime screen above
 that. It has no runtime dependencies outside the Python standard library.
 Python 3.14 or newer is required.
 
+This is not a production cryptography tool. It is not intended to break real
+RSA keys or compete with specialized ECM/QS/NFS implementations.
+
+## Installation
+
+```bash
+python -m pip install fast-factorization
+```
+
 For larger integers, install the optional native arithmetic backend:
 
 ```bash
-python -m pip install ".[fast]"
+python -m pip install "fast-factorization[fast]"
 ```
 
 ## Usage
@@ -122,6 +132,7 @@ challenge numbers.
 
 See [docs/factorization-logic.md](docs/factorization-logic.md) for the full
 factorization pipeline.
+See [docs/publishing.md](docs/publishing.md) for the release checklist.
 
 ## API
 

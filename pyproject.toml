@@ -5,14 +5,22 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "fast-factorization"
 version = "0.1.0"
-description = "Factor composite integers into two non-trivial factors."
+description = "Educational integer factorization toolkit with a CLI and benchmarks."
 readme = "README.md"
 requires-python = ">=3.14"
-license = "MIT"
+license = "GPL-3.0-only"
+license-files = ["LICENSE"]
 authors = [
     {name = "Igor Nikitin", email = "nikiigo@users.noreply.github.com"},
 ]
-keywords = ["factorization", "number-theory", "pollard-rho", "pollard-p-minus-1", "fermat"]
+keywords = [
+    "factorization",
+    "number-theory",
+    "pollard-rho",
+    "pollard-p-minus-1",
+    "fermat",
+    "benchmark",
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Education",
@@ -20,9 +28,11 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Utilities",
 ]
 
 [project.urls]
+Documentation = "https://github.com/nikiigo/fast-factorization/tree/main/docs"
 Homepage = "https://github.com/nikiigo/fast-factorization"
 Repository = "https://github.com/nikiigo/fast-factorization"
 Issues = "https://github.com/nikiigo/fast-factorization/issues"
