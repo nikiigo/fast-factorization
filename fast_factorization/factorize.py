@@ -236,8 +236,42 @@ def _pollard_rho(
     if num % 3 == 0:
         return 3
 
-    def polynomial(value):
-        return (_pow_mod(value, 2, num) + constant) % num
+    if gmpy2 is not None:
+        gmp_num = gmpy2.mpz(num)
+        gmp_constant = gmpy2.mpz(constant)
+        y = gmpy2.mpz(start) % gmp_num
+        r = 1
+        q = gmpy2.mpz(1)
+        divisor = gmpy2.mpz(1)
+        steps = 0
+
+        while divisor == 1 and steps < max_steps:
+            x = y
+            for _ in range(r):
+                y = (y * y + gmp_constant) % gmp_num
+                steps += 1
+
+            k = 0
+            while k < r and divisor == 1:
+                ys = y
+                for _ in range(min(batch_size, r - k)):
+                    y = (y * y + gmp_constant) % gmp_num
+                    q = (q * abs(x - y)) % gmp_num
+                    steps += 1
+                divisor = gmpy2.gcd(q, gmp_num)
+                k += batch_size
+            r *= 2
+
+        if divisor == gmp_num and "ys" in locals():
+            divisor = gmpy2.mpz(1)
+            while divisor == 1 and steps < max_steps * 2:
+                ys = (ys * ys + gmp_constant) % gmp_num
+                divisor = gmpy2.gcd(abs(x - ys), gmp_num)
+                steps += 1
+
+        if divisor in (1, gmp_num):
+            return None
+        return int(divisor)
 
     y = start % num
     r = 1
@@ -248,14 +282,14 @@ def _pollard_rho(
     while divisor == 1 and steps < max_steps:
         x = y
         for _ in range(r):
-            y = polynomial(y)
+            y = (y * y + constant) % num
             steps += 1
 
         k = 0
         while k < r and divisor == 1:
             ys = y
             for _ in range(min(batch_size, r - k)):
-                y = polynomial(y)
+                y = (y * y + constant) % num
                 q = (q * abs(x - y)) % num
                 steps += 1
             divisor = _gcd(q, num)
@@ -265,7 +299,7 @@ def _pollard_rho(
     if divisor == num and "ys" in locals():
         divisor = 1
         while divisor == 1 and steps < max_steps * 2:
-            ys = polynomial(ys)
+            ys = (ys * ys + constant) % num
             divisor = _gcd(abs(x - ys), num)
             steps += 1
 
