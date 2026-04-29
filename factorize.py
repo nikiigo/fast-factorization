@@ -19,6 +19,9 @@ SMALL_PRIMES = (
 TRIAL_DIVISION_LIMIT = 10_000
 FERMAT_MAX_STEPS = 100_000
 POLLARD_PM1_BOUND = 10_000
+POLLARD_PM1_MAX_BOUND = 1_000_000
+POLLARD_RHO_MAX_ATTEMPTS = 100
+POLLARD_RHO_MAX_STEPS = 1_000_000
 MILLER_RABIN_WITNESSES_SMALL = (2, 3, 5, 7, 11, 13, 17)
 MILLER_RABIN_WITNESSES_64 = (2, 325, 9375, 28178, 450775, 9780504, 1795265022)
 
@@ -203,6 +206,8 @@ def _fermat_factor(num: int, max_steps: int | None = None):
 def _pollard_pm1(num: int, bound: int = POLLARD_PM1_BOUND, base: int = 2):
     if bound < 2:
         return None
+    if bound > POLLARD_PM1_MAX_BOUND:
+        raise ValueError(f"Pollard p-1 bound must be <= {POLLARD_PM1_MAX_BOUND}")
     if num % 2 == 0:
         return 2
 
@@ -224,7 +229,7 @@ def _pollard_rho(
     start: int = 2,
     constant: int = 1,
     batch_size: int = 128,
-    max_steps: int = 1_000_000,
+    max_steps: int = POLLARD_RHO_MAX_STEPS,
 ):
     if num % 2 == 0:
         return 2
@@ -269,16 +274,30 @@ def _pollard_rho(
     return divisor
 
 
-def _find_factor(num: int, processes: int = 1, proc_id: int = 0):
+def _find_factor(
+    num: int,
+    processes: int = 1,
+    proc_id: int = 0,
+    rho_attempts: int = POLLARD_RHO_MAX_ATTEMPTS,
+    rho_max_steps: int = POLLARD_RHO_MAX_STEPS,
+):
     stride = max(1, processes)
     attempt = proc_id
-    while True:
+    attempts_used = 0
+    while rho_attempts == 0 or attempts_used < rho_attempts:
         constant = 1 + attempt
         start = 2 + attempt * 2
-        divisor = _pollard_rho(num, start=start, constant=constant)
+        divisor = _pollard_rho(
+            num,
+            start=start,
+            constant=constant,
+            max_steps=rho_max_steps,
+        )
         if divisor is not None:
             return divisor
         attempt += stride
+        attempts_used += 1
+    return None
 
 
 def _sorted_factor_pair(num: int, divisor: int):
@@ -325,8 +344,14 @@ def factorize(
     proc_id=0,
     fermat_steps: int | None = None,
     pm1_bound: int = POLLARD_PM1_BOUND,
+    rho_attempts: int = POLLARD_RHO_MAX_ATTEMPTS,
+    rho_max_steps: int = POLLARD_RHO_MAX_STEPS,
 ):
-    """Return two non-trivial factors of num, or None when num is prime/invalid."""
+    """Return two non-trivial factors of num, or None.
+
+    None means the input is invalid, prime/probable-prime, or no factor was
+    found within the configured search limits.
+    """
     handled, result = _factorize_fast_paths(
         num,
         fermat_steps=fermat_steps,
@@ -335,7 +360,13 @@ def factorize(
     if handled:
         return result
 
-    divisor = _find_factor(num, processes=processes, proc_id=proc_id)
+    divisor = _find_factor(
+        num,
+        processes=processes,
+        proc_id=proc_id,
+        rho_attempts=rho_attempts,
+        rho_max_steps=rho_max_steps,
+    )
     if divisor in (None, 1, num):
         return None
 
@@ -375,7 +406,19 @@ def _parse_args(argv):
         "--pm1-bound",
         type=int,
         default=POLLARD_PM1_BOUND,
-        help="smoothness bound for Pollard p-1; use 0 to disable",
+        help=f"smoothness bound for Pollard p-1; use 0 to disable; max {POLLARD_PM1_MAX_BOUND}",
+    )
+    parser.add_argument(
+        "--rho-attempts",
+        type=int,
+        default=POLLARD_RHO_MAX_ATTEMPTS,
+        help="Pollard Rho retry attempts; use 0 for unlimited",
+    )
+    parser.add_argument(
+        "--rho-max-steps",
+        type=int,
+        default=POLLARD_RHO_MAX_STEPS,
+        help="maximum polynomial steps per Pollard Rho attempt",
     )
     return parser.parse_args(argv[1:])
 
@@ -385,9 +428,17 @@ def _factorize_parallel(
     processes: int,
     fermat_steps: int | None = None,
     pm1_bound: int = POLLARD_PM1_BOUND,
+    rho_attempts: int = POLLARD_RHO_MAX_ATTEMPTS,
+    rho_max_steps: int = POLLARD_RHO_MAX_STEPS,
 ):
     if processes <= 1:
-        return factorize(num, fermat_steps=fermat_steps, pm1_bound=pm1_bound)
+        return factorize(
+            num,
+            fermat_steps=fermat_steps,
+            pm1_bound=pm1_bound,
+            rho_attempts=rho_attempts,
+            rho_max_steps=rho_max_steps,
+        )
 
     handled, result = _factorize_fast_paths(
         num,
@@ -398,7 +449,13 @@ def _factorize_parallel(
         return result
 
     worker_count = min(processes, os.cpu_count() or 1)
-    args = [(num, worker_count, proc_id) for proc_id in range(worker_count)]
+    worker_attempts = rho_attempts
+    if rho_attempts > 0:
+        worker_attempts = math.ceil(rho_attempts / worker_count)
+    args = [
+        (num, worker_count, proc_id, worker_attempts, rho_max_steps)
+        for proc_id in range(worker_count)
+    ]
     try:
         with Pool(worker_count) as pool:
             for divisor in pool.imap_unordered(_pollard_worker, args):
@@ -407,7 +464,13 @@ def _factorize_parallel(
                     return _sorted_factor_pair(num, divisor)
     except OSError as exc:
         LOGGER.warning("multiprocessing unavailable: %s; falling back to one process", exc)
-        return factorize(num, fermat_steps=fermat_steps, pm1_bound=pm1_bound)
+        return factorize(
+            num,
+            fermat_steps=fermat_steps,
+            pm1_bound=pm1_bound,
+            rho_attempts=rho_attempts,
+            rho_max_steps=rho_max_steps,
+        )
     return None
 
 
@@ -430,6 +493,15 @@ def main(argv=None):
     if args.pm1_bound < 0:
         print("--pm1-bound must be greater than or equal to 0", file=sys.stderr)
         return 2
+    if args.pm1_bound > POLLARD_PM1_MAX_BOUND:
+        print(f"--pm1-bound must be <= {POLLARD_PM1_MAX_BOUND}", file=sys.stderr)
+        return 2
+    if args.rho_attempts < 0:
+        print("--rho-attempts must be greater than or equal to 0", file=sys.stderr)
+        return 2
+    if args.rho_max_steps < 1:
+        print("--rho-max-steps must be greater than 0", file=sys.stderr)
+        return 2
 
     started_at = time.time()
     result = _factorize_parallel(
@@ -437,6 +509,8 @@ def main(argv=None):
         args.processes,
         args.fermat_steps,
         args.pm1_bound,
+        args.rho_attempts,
+        args.rho_max_steps,
     )
     elapsed = time.time() - started_at
 

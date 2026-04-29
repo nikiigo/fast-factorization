@@ -47,6 +47,13 @@ python factorize.py --pm1-bound 50000 10009000070063
 python factorize.py --pm1-bound 0 10009000070063
 ```
 
+Tune or disable Pollard Rho retry limits:
+
+```bash
+python factorize.py --rho-attempts 200 --rho-max-steps 1000000 10000015400005913
+python factorize.py --rho-attempts 0 10000015400005913
+```
+
 ## Tests
 
 ```bash
@@ -89,6 +96,7 @@ Run RSA-100 with an installed external factoring tool:
 python benchmark.py --external cado-nfs --external-timeout 3600
 python benchmark.py --external yafu --external-timeout 3600
 python benchmark.py --external cado-nfs --external-command /path/to/cado-nfs.py
+python benchmark.py --external cado-nfs --external-command "python /path/to/cado-nfs.py"
 ```
 
 ## Practice Numbers
@@ -121,5 +129,6 @@ factors = factorize.factorize(91)
 print(factors)  # (7, 13)
 ```
 
-`factorize.factorize(n)` returns a two-item tuple for composite integers and
-`None` for invalid input or prime numbers.
+`factorize.factorize(n)` returns a two-item tuple for a found composite split.
+It returns `None` for invalid input, prime/probable-prime input, or composites
+that were not factored within the configured search limits.

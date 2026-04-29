@@ -1,4 +1,5 @@
 import argparse
+import shlex
 import shutil
 import subprocess
 import time
@@ -53,33 +54,33 @@ def _parse_args():
     return parser.parse_args()
 
 
-def _find_external_executable(tool: str, explicit_command: str | None = None):
+def _find_external_command(tool: str, explicit_command: str | None = None):
     if explicit_command:
-        return explicit_command
+        return shlex.split(explicit_command)
     candidates = (tool,)
     if tool == "cado-nfs":
         candidates = ("cado-nfs", "cado-nfs.py")
     for candidate in candidates:
         executable = shutil.which(candidate)
         if executable is not None:
-            return executable
+            return [executable]
     return None
 
 
 def _run_external_tool(tool: str, timeout: int, explicit_command: str | None = None):
-    executable = _find_external_executable(tool, explicit_command)
-    if executable is None:
+    executable_command = _find_external_command(tool, explicit_command)
+    if executable_command is None:
         print()
         print(f"{tool} is not installed or not on PATH")
         if tool == "cado-nfs":
             print("Tried: cado-nfs, cado-nfs.py")
         return
 
-    command = [executable, str(challenge_numbers.RSA_100)]
+    command = [*executable_command, str(challenge_numbers.RSA_100)]
     if tool == "cado-nfs":
-        command = [executable, "-t", "all", str(challenge_numbers.RSA_100)]
+        command = [*executable_command, "-t", "all", str(challenge_numbers.RSA_100)]
     elif tool == "yafu":
-        command = [executable, f"factor({challenge_numbers.RSA_100})"]
+        command = [*executable_command, f"factor({challenge_numbers.RSA_100})"]
 
     print()
     print(f"Running external RSA-100 benchmark: {' '.join(command)}")

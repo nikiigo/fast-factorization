@@ -71,6 +71,17 @@ class TestFactorize(unittest.TestCase):
         for num in (-10, 0, 1, 2, 97):
             self.assertIsNone(factorize.factorize(num))
 
+    def test_factorize_respects_pollard_rho_attempt_limit(self):
+        self.assertIsNone(
+            factorize.factorize(
+                challenge_numbers.PRACTICAL_RHO_SEMIPRIME,
+                fermat_steps=0,
+                pm1_bound=0,
+                rho_attempts=1,
+                rho_max_steps=1,
+            )
+        )
+
     def test_factorize_even_composite(self):
         self.assertEqual(factorize.factorize(100), (2, 50))
 
@@ -114,10 +125,14 @@ class TestFactorize(unittest.TestCase):
         self.assertIsNone(factorize._pollard_pm1(number, bound=10_000))
         self.assertEqual(factorize._pollard_pm1(number, bound=10_061), 20_123)
 
+    def test_pollard_pm1_rejects_excessive_bounds(self):
+        with self.assertRaises(ValueError):
+            factorize._pollard_pm1(91, bound=factorize.POLLARD_PM1_MAX_BOUND + 1)
+
     def test_external_command_overrides_executable_lookup(self):
         self.assertEqual(
-            benchmark._find_external_executable("cado-nfs", "/tmp/cado-nfs.py"),
-            "/tmp/cado-nfs.py",
+            benchmark._find_external_command("cado-nfs", "python /tmp/cado-nfs.py"),
+            ["python", "/tmp/cado-nfs.py"],
         )
 
     def test_factorize_project_euler_3_number(self):
