@@ -4,6 +4,7 @@ import time
 import unittest
 
 import challenge_numbers
+import benchmark
 import factorize
 
 
@@ -106,6 +107,17 @@ class TestFactorize(unittest.TestCase):
                 challenge_numbers.PM1_FRIENDLY_LEFT,
                 challenge_numbers.PM1_FRIENDLY_RIGHT,
             ),
+        )
+
+    def test_pollard_pm1_honors_bounds_above_trial_division_limit(self):
+        number = 20_123 * 1_000_000_007
+        self.assertIsNone(factorize._pollard_pm1(number, bound=10_000))
+        self.assertEqual(factorize._pollard_pm1(number, bound=10_061), 20_123)
+
+    def test_external_command_overrides_executable_lookup(self):
+        self.assertEqual(
+            benchmark._find_external_executable("cado-nfs", "/tmp/cado-nfs.py"),
+            "/tmp/cado-nfs.py",
         )
 
     def test_factorize_project_euler_3_number(self):

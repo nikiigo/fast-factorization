@@ -41,6 +41,10 @@ def _parse_args():
         help="run RSA-100 with an installed external factoring tool",
     )
     parser.add_argument(
+        "--external-command",
+        help="explicit command or path for the external factoring tool",
+    )
+    parser.add_argument(
         "--external-timeout",
         type=int,
         default=3600,
@@ -49,11 +53,26 @@ def _parse_args():
     return parser.parse_args()
 
 
-def _run_external_tool(tool: str, timeout: int):
-    executable = shutil.which(tool)
+def _find_external_executable(tool: str, explicit_command: str | None = None):
+    if explicit_command:
+        return explicit_command
+    candidates = (tool,)
+    if tool == "cado-nfs":
+        candidates = ("cado-nfs", "cado-nfs.py")
+    for candidate in candidates:
+        executable = shutil.which(candidate)
+        if executable is not None:
+            return executable
+    return None
+
+
+def _run_external_tool(tool: str, timeout: int, explicit_command: str | None = None):
+    executable = _find_external_executable(tool, explicit_command)
     if executable is None:
         print()
         print(f"{tool} is not installed or not on PATH")
+        if tool == "cado-nfs":
+            print("Tried: cado-nfs, cado-nfs.py")
         return
 
     command = [executable, str(challenge_numbers.RSA_100)]
@@ -106,7 +125,7 @@ def main():
         print("not attempted by this benchmark")
 
     if args.external:
-        _run_external_tool(args.external, args.external_timeout)
+        _run_external_tool(args.external, args.external_timeout, args.external_command)
 
 
 if __name__ == "__main__":

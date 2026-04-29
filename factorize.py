@@ -37,6 +37,17 @@ def _generate_primes(limit: int):
 TRIAL_PRIMES = _generate_primes(TRIAL_DIVISION_LIMIT)
 
 
+def _primes_up_to(limit: int):
+    if limit <= TRIAL_DIVISION_LIMIT:
+        for prime in TRIAL_PRIMES:
+            if prime > limit:
+                break
+            yield prime
+        return
+
+    yield from _generate_primes(limit)
+
+
 def _gcd(left: int, right: int):
     if gmpy2 is not None:
         return int(gmpy2.gcd(left, right))
@@ -110,7 +121,11 @@ def is_perfect_square(num: int):
 
 
 def is_prime(num: int):
-    """Deterministic Miller-Rabin for numbers below 2**64."""
+    """Miller-Rabin primality test.
+
+    Deterministic for numbers below 2**64. For larger numbers this is a
+    probable-prime screen using a fixed witness set.
+    """
     if num < 2:
         return False
 
@@ -192,9 +207,7 @@ def _pollard_pm1(num: int, bound: int = POLLARD_PM1_BOUND, base: int = 2):
         return 2
 
     a = base % num
-    for prime in TRIAL_PRIMES:
-        if prime > bound:
-            break
+    for prime in _primes_up_to(bound):
         power = prime
         while power * prime <= bound:
             power *= prime

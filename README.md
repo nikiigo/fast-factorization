@@ -3,9 +3,10 @@
 Factor composite integers into two non-trivial factors.
 
 The implementation uses trial division, perfect-square checks, Fermat for close
-factors, Pollard p-1, deterministic Miller-Rabin primality checks, and Pollard
-Rho. It has no runtime dependencies outside the Python standard library. Python
-3.14 or newer is required.
+factors, Pollard p-1, Miller-Rabin primality checks, and Pollard Rho. Miller-
+Rabin is deterministic below `2**64` and used as a probable-prime screen above
+that. It has no runtime dependencies outside the Python standard library.
+Python 3.14 or newer is required.
 
 For larger integers, install the optional native arithmetic backend:
 
@@ -87,6 +88,7 @@ Run RSA-100 with an installed external factoring tool:
 ```bash
 python benchmark.py --external cado-nfs --external-timeout 3600
 python benchmark.py --external yafu --external-timeout 3600
+python benchmark.py --external cado-nfs --external-command /path/to/cado-nfs.py
 ```
 
 ## Practice Numbers
