@@ -120,6 +120,9 @@ factors, or factors reachable by Pollard Rho. It is not intended to compete with
 CADO-NFS, YAFU, Msieve, GGNFS, or other dedicated QS/NFS implementations on RSA
 challenge numbers.
 
+See [docs/factorization-logic.md](docs/factorization-logic.md) for the full
+factorization pipeline.
+
 ## API
 
 ```python
