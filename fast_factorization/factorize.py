@@ -20,6 +20,7 @@ TRIAL_DIVISION_LIMIT = 10_000
 FERMAT_MAX_STEPS = 100_000
 POLLARD_PM1_BOUND = 10_000
 POLLARD_PM1_MAX_BOUND = 1_000_000
+POLLARD_PM1_STAGE_BOUNDS = (64, 256, 1_024, 4_096)
 POLLARD_RHO_MAX_ATTEMPTS = 100
 POLLARD_RHO_MAX_STEPS = 1_000_000
 MILLER_RABIN_WITNESSES_SMALL = (2, 3, 5, 7, 11, 13, 17)
@@ -211,6 +212,11 @@ def _pollard_pm1(num: int, bound: int = POLLARD_PM1_BOUND, base: int = 2):
     if num % 2 == 0:
         return 2
 
+    stage_bounds = tuple(stage for stage in POLLARD_PM1_STAGE_BOUNDS if stage < bound)
+    stage_bounds = (*stage_bounds, bound)
+    stage_index = 0
+    next_stage = stage_bounds[stage_index]
+
     a = base % num
     for prime in _primes_up_to(bound):
         power = prime
@@ -218,10 +224,16 @@ def _pollard_pm1(num: int, bound: int = POLLARD_PM1_BOUND, base: int = 2):
             power *= prime
         a = _pow_mod(a, power, num)
 
-    divisor = _gcd(a - 1, num)
-    if divisor in (1, num):
-        return None
-    return divisor
+        while prime >= next_stage:
+            divisor = _gcd(a - 1, num)
+            if divisor not in (1, num):
+                return divisor
+            stage_index += 1
+            if stage_index >= len(stage_bounds):
+                return None
+            next_stage = stage_bounds[stage_index]
+
+    return None
 
 
 def _pollard_rho(

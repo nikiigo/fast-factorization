@@ -128,6 +128,18 @@ prime powers.
 The default smoothness bound is `10_000`. The package accepts bounds up to
 `1_000_000`.
 
+Internally, Pollard p-1 is staged. The configured `--pm1-bound` is treated as
+the maximum bound, but the implementation checks for a factor at smaller
+milestones first:
+
+```python
+64, 256, 1_024, 4_096, pm1_bound
+```
+
+This allows p-1-friendly numbers with low smoothness requirements to stop early
+instead of always running all modular exponentiation work up to the maximum
+bound.
+
 CLI tuning:
 
 ```bash

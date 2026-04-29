@@ -64,6 +64,9 @@ python -m fast_factorization --pm1-bound 50000 10009000070063
 python -m fast_factorization --pm1-bound 0 10009000070063
 ```
 
+The p-1 bound is a maximum. The implementation checks staged lower bounds first
+and stops early when a factor is found.
+
 Tune or disable Pollard Rho retry limits:
 
 ```bash
