@@ -1,5 +1,6 @@
 from .factorize import (
     digit_root,
+    factor_pair,
     factorize,
     is_even,
     is_perfect_square,
@@ -10,6 +11,7 @@ from .factorize import (
 
 __all__ = [
     "digit_root",
+    "factor_pair",
     "factorize",
     "is_even",
     "is_perfect_square",

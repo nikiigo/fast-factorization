@@ -1,17 +1,20 @@
 # Factorization Logic
 
 This project factors an integer by applying a sequence of increasingly general
-checks. The goal is to find one non-trivial divisor and return:
+checks. The internal `factor_pair()` helper finds one non-trivial split:
 
 ```python
 (divisor, n // divisor)
 ```
 
-If no factor is found, `factorize()` returns `None`.
+The public `factorize()` function recursively factors both returned values and
+returns a sorted tuple of discovered factors.
+
+If no factorization is found, `factorize()` returns `None`.
 
 ## Pipeline
 
-`fast_factorization.factorize.factorize()` runs these stages:
+`fast_factorization.factorize.factor_pair()` runs these stages:
 
 1. Reject invalid input and tiny primes.
 2. Return immediately for even numbers.
@@ -69,7 +72,7 @@ Miller-Rabin is used as a primality screen after cheap composite checks.
 It is deterministic below `2**64`. Above `2**64`, the implementation uses a
 fixed witness set and should be treated as a probable-prime screen.
 
-If the number passes this stage, `factorize()` returns `None`.
+If the number passes this stage, `factor_pair()` returns `None`.
 
 ### Fermat Factorization
 
@@ -151,7 +154,7 @@ and falls back to one process.
 
 ## Return Semantics
 
-`factorize(n)` returns:
+`factor_pair(n)` returns:
 
 - `(a, b)` when a non-trivial factor split is found
 - `None` for invalid input
@@ -160,8 +163,14 @@ and falls back to one process.
 
 The returned pair is sorted in ascending order.
 
-The package does not recursively factor both returned values. For example,
-factoring `100` returns `(2, 50)`, not `(2, 2, 5, 5)`.
+`factorize(n)` recursively factors both values returned by `factor_pair()` and
+returns a sorted tuple. For example, factoring `100` returns:
+
+```python
+(2, 2, 5, 5)
+```
+
+Prime and probable-prime inputs return a one-item tuple, such as `(97,)`.
 
 ## Scope
 

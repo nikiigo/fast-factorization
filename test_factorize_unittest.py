@@ -70,8 +70,10 @@ class TestFactorize(unittest.TestCase):
             self.assertFalse(factorize.is_prime(num))
 
     def test_factorize_rejects_invalid_and_prime_inputs(self):
-        for num in (-10, 0, 1, 2, 97):
+        for num in (-10, 0, 1):
             self.assertIsNone(factorize.factorize(num))
+        for num in (2, 97):
+            self.assertEqual(factorize.factorize(num), (num,))
 
     def test_factorize_respects_pollard_rho_attempt_limit(self):
         self.assertIsNone(
@@ -85,7 +87,11 @@ class TestFactorize(unittest.TestCase):
         )
 
     def test_factorize_even_composite(self):
-        self.assertEqual(factorize.factorize(100), (2, 50))
+        self.assertEqual(factorize.factor_pair(100), (2, 50))
+        self.assertEqual(factorize.factorize(100), (2, 2, 5, 5))
+
+    def test_cli_uses_recursive_factorization(self):
+        self.assertEqual(factorize._factorize_parallel_recursive(100, processes=1), (2, 2, 5, 5))
 
     def test_factorize_small_trial_division_factor(self):
         self.assertEqual(factorize.factorize(101 * 1000003), (101, 1000003))
@@ -139,7 +145,7 @@ class TestFactorize(unittest.TestCase):
 
     def test_factorize_project_euler_3_number(self):
         factors = factorize.factorize(challenge_numbers.PROJECT_EULER_3)
-        self.assert_factor_pair(challenge_numbers.PROJECT_EULER_3, factors)
+        self.assertEqual(factors, challenge_numbers.PROJECT_EULER_3_FACTORS)
 
     def test_rsa_100_reference_factors_are_correct(self):
         self.assertEqual(

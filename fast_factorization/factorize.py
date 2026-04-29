@@ -338,7 +338,7 @@ def _factorize_fast_paths(
     return False, None
 
 
-def factorize(
+def factor_pair(
     num: int,
     processes=1,
     proc_id=0,
@@ -373,6 +373,51 @@ def factorize(
     return _sorted_factor_pair(num, divisor)
 
 
+def _factorize_recursive(num: int, kwargs: dict):
+    if num < 2:
+        return None
+    if is_prime(num):
+        return (num,)
+
+    pair = factor_pair(num, **kwargs)
+    if pair is None:
+        return None
+
+    factors = []
+    for part in pair:
+        subfactors = _factorize_recursive(part, kwargs)
+        if subfactors is None:
+            factors.append(part)
+        else:
+            factors.extend(subfactors)
+    return tuple(sorted(factors))
+
+
+def factorize(
+    num: int,
+    processes=1,
+    proc_id=0,
+    fermat_steps: int | None = None,
+    pm1_bound: int = POLLARD_PM1_BOUND,
+    rho_attempts: int = POLLARD_RHO_MAX_ATTEMPTS,
+    rho_max_steps: int = POLLARD_RHO_MAX_STEPS,
+):
+    """Return a sorted tuple of recursively discovered factors, or None.
+
+    None means the input is invalid or no factorization was found within the
+    configured search limits. Prime and probable-prime inputs return `(num,)`.
+    """
+    kwargs = {
+        "processes": processes,
+        "proc_id": proc_id,
+        "fermat_steps": fermat_steps,
+        "pm1_bound": pm1_bound,
+        "rho_attempts": rho_attempts,
+        "rho_max_steps": rho_max_steps,
+    }
+    return _factorize_recursive(num, kwargs)
+
+
 def _pollard_worker(args):
     return _find_factor(*args)
 
@@ -380,7 +425,7 @@ def _pollard_worker(args):
 def _parse_args(argv):
     parser = argparse.ArgumentParser(
         prog=argv[0],
-        description="Factor a composite integer into two non-trivial factors.",
+        description="Recursively factor an integer.",
     )
     parser.add_argument("number", type=int)
     parser.add_argument(
@@ -432,7 +477,7 @@ def _factorize_parallel(
     rho_max_steps: int = POLLARD_RHO_MAX_STEPS,
 ):
     if processes <= 1:
-        return factorize(
+        return factor_pair(
             num,
             fermat_steps=fermat_steps,
             pm1_bound=pm1_bound,
@@ -464,7 +509,7 @@ def _factorize_parallel(
                     return _sorted_factor_pair(num, divisor)
     except OSError as exc:
         LOGGER.warning("multiprocessing unavailable: %s; falling back to one process", exc)
-        return factorize(
+        return factor_pair(
             num,
             fermat_steps=fermat_steps,
             pm1_bound=pm1_bound,
@@ -472,6 +517,47 @@ def _factorize_parallel(
             rho_max_steps=rho_max_steps,
         )
     return None
+
+
+def _factorize_parallel_recursive(
+    num: int,
+    processes: int,
+    fermat_steps: int | None = None,
+    pm1_bound: int = POLLARD_PM1_BOUND,
+    rho_attempts: int = POLLARD_RHO_MAX_ATTEMPTS,
+    rho_max_steps: int = POLLARD_RHO_MAX_STEPS,
+):
+    if num < 2:
+        return None
+    if is_prime(num):
+        return (num,)
+
+    pair = _factorize_parallel(
+        num,
+        processes,
+        fermat_steps=fermat_steps,
+        pm1_bound=pm1_bound,
+        rho_attempts=rho_attempts,
+        rho_max_steps=rho_max_steps,
+    )
+    if pair is None:
+        return None
+
+    factors = []
+    for part in pair:
+        subfactors = _factorize_parallel_recursive(
+            part,
+            processes,
+            fermat_steps=fermat_steps,
+            pm1_bound=pm1_bound,
+            rho_attempts=rho_attempts,
+            rho_max_steps=rho_max_steps,
+        )
+        if subfactors is None:
+            factors.append(part)
+        else:
+            factors.extend(subfactors)
+    return tuple(sorted(factors))
 
 
 def main(argv=None):
@@ -504,7 +590,7 @@ def main(argv=None):
         return 2
 
     started_at = time.time()
-    result = _factorize_parallel(
+    result = _factorize_parallel_recursive(
         args.number,
         args.processes,
         args.fermat_steps,
@@ -518,9 +604,8 @@ def main(argv=None):
         print(f"No non-trivial factor found for {args.number}")
         return 1
 
-    left, right = result
-    print(f"Factors: {left} {right}")
-    print(f"Product check: {left * right}")
+    print(f"Factors: {' '.join(str(factor) for factor in result)}")
+    print(f"Product check: {math.prod(result)}")
     print("Elapsed time hh:mm:ss", time.strftime("%H:%M:%S", time.gmtime(elapsed)))
     return 0
 

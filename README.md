@@ -1,6 +1,6 @@
 # fast-factorization
 
-Factor composite integers into two non-trivial factors.
+Factor composite integers into recursively discovered factors.
 
 The implementation uses trial division, perfect-square checks, Fermat for close
 factors, Pollard p-1, Miller-Rabin primality checks, and Pollard Rho. Miller-
@@ -132,6 +132,9 @@ factors = fast_factorization.factorize(91)
 print(factors)  # (7, 13)
 ```
 
-`fast_factorization.factorize(n)` returns a two-item tuple for a found composite split.
-It returns `None` for invalid input, prime/probable-prime input, or composites
-that were not factored within the configured search limits.
+`fast_factorization.factorize(n)` returns a sorted tuple of recursively
+discovered factors. It returns `None` for invalid input or composites that were
+not factored within the configured search limits.
+
+Use `fast_factorization.factor_pair(n)` when you only want one non-trivial
+split.
