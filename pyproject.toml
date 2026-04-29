@@ -8,7 +8,24 @@ version = "0.1.0"
 description = "Factor composite integers into two non-trivial factors."
 readme = "README.md"
 requires-python = ">=3.14"
-license = {text = "MIT"}
+license = "MIT"
+authors = [
+    {name = "Igor Nikitin", email = "nikiigo@users.noreply.github.com"},
+]
+keywords = ["factorization", "number-theory", "pollard-rho", "pollard-p-minus-1", "fermat"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
+
+[project.urls]
+Homepage = "https://github.com/nikiigo/fast-factorization"
+Repository = "https://github.com/nikiigo/fast-factorization"
+Issues = "https://github.com/nikiigo/fast-factorization/issues"
 
 [project.scripts]
 fast-factorization = "fast_factorization.factorize:main"
