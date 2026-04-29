@@ -6,7 +6,8 @@ is not expected to factor RSA challenge numbers quickly.
 
 ## Before Publishing
 
-1. Confirm the package version in `pyproject.toml`.
+1. Confirm the intended release tag. Package versions are derived from Git tags
+   with `setuptools-scm`; there is no static version in `pyproject.toml`.
 2. Run the test suite:
 
    ```bash
@@ -78,6 +79,10 @@ Then publish by pushing a version tag, for example:
 git tag v<version>
 git push origin v<version>
 ```
+
+For example, `v0.1.2` builds and publishes package version `0.1.2`. Builds made
+after the latest tag and before the next release tag produce development
+versions such as `0.1.2.dev3`.
 
 The workflow also supports manual PyPI publishing with `target=pypi`, but the
 tag flow is preferred because it leaves a clear release marker in Git.

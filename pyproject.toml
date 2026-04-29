@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=77"]
+requires = ["setuptools>=77", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "fast-factorization"
-version = "0.1.1"
+dynamic = ["version"]
 description = "Educational integer factorization toolkit with a CLI and benchmarks."
 readme = "README.md"
 requires-python = ">=3.14"
@@ -45,3 +45,7 @@ fast = ["gmpy2>=2.1"]
 
 [tool.setuptools]
 packages = ["fast_factorization"]
+
+[tool.setuptools_scm]
+version_scheme = "guess-next-dev"
+local_scheme = "no-local-version"
