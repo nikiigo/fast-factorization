@@ -38,24 +38,58 @@ is not expected to factor RSA challenge numbers quickly.
 
 ## TestPyPI
 
-Publish to TestPyPI first:
+This project publishes with PyPI Trusted Publishing from GitHub Actions. Create
+a pending trusted publisher in TestPyPI before the first upload:
 
-```bash
-python -m twine upload --repository testpypi dist/*
-```
+- URL: https://test.pypi.org/manage/account/publishing/
+- Project name: `fast-factorization`
+- Owner: `nikiigo`
+- Repository: `fast-factorization`
+- Workflow name: `publish.yml`
+- Environment name: `testpypi`
+
+After the trusted publisher is registered, run the `Publish Python package`
+workflow manually in GitHub Actions with `target=testpypi`.
 
 Then install from TestPyPI in a clean environment:
 
 ```bash
-python -m pip install --index-url https://test.pypi.org/simple/ fast-factorization
+python -m pip install --index-url https://test.pypi.org/simple/ --no-deps fast-factorization
 ```
 
 ## PyPI
 
-After TestPyPI verification, publish to PyPI:
+After TestPyPI verification, create a pending trusted publisher in PyPI:
+
+- URL: https://pypi.org/manage/account/publishing/
+- Project name: `fast-factorization`
+- Owner: `nikiigo`
+- Repository: `fast-factorization`
+- Workflow name: `publish.yml`
+- Environment name: `pypi`
+
+In GitHub repository settings, create the `pypi` environment and require manual
+approval before deployment. This prevents an accidental tag push from publishing
+without review.
+
+Then publish by pushing a version tag, for example:
 
 ```bash
-python -m twine upload dist/*
+git tag v0.1.0
+git push origin v0.1.0
 ```
 
-Use a PyPI API token rather than an account password.
+The workflow also supports manual PyPI publishing with `target=pypi`, but the
+tag flow is preferred because it leaves a clear release marker in Git.
+
+## Token Fallback
+
+Trusted Publishing is preferred. If it is unavailable, use API tokens with
+`twine`:
+
+```bash
+TWINE_USERNAME=__token__ TWINE_PASSWORD=<token> python -m twine upload dist/*
+```
+
+Use separate tokens for TestPyPI and PyPI, and prefer project-scoped tokens once
+the project exists.
