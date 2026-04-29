@@ -64,6 +64,12 @@ RUN_BIG_FACTOR_TEST=1 python -m unittest test_factorize_unittest.TestFactorize.t
 python benchmark.py
 ```
 
+Compare the current perfect-square check against the old digit/filter approach:
+
+```bash
+python benchmark_square_checks.py
+```
+
 Include a larger synthetic close-prime semiprime:
 
 ```bash
