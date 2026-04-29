@@ -16,8 +16,11 @@ is not expected to factor RSA challenge numbers quickly.
 3. Build source and wheel distributions:
 
    ```bash
-   python -m build --no-isolation
+   python -m build
    ```
+
+   Use `python -m build --no-isolation` only for local troubleshooting when the
+   isolated build environment is not needed.
 
 4. Check the distributions:
 

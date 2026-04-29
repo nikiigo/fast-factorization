@@ -64,10 +64,12 @@ python -m fast_factorization --rho-attempts 200 --rho-max-steps 1000000 10000015
 python -m fast_factorization --rho-attempts 0 10000015400005913
 ```
 
-Default limits are documented in
-[docs/factorization-logic.md](docs/factorization-logic.md#default-limits).
+Default limits are documented in the
+[factorization logic guide](https://github.com/nikiigo/fast-factorization/blob/main/docs/factorization-logic.md#default-limits).
 
 ## Tests
+
+From a source checkout:
 
 ```bash
 python -m unittest -v
@@ -80,6 +82,8 @@ RUN_BIG_FACTOR_TEST=1 python -m unittest test_factorize_unittest.TestFactorize.t
 ```
 
 ## Benchmark
+
+From a source checkout:
 
 ```bash
 python benchmark.py
@@ -133,9 +137,12 @@ factors, or factors reachable by Pollard Rho. It is not intended to compete with
 CADO-NFS, YAFU, Msieve, GGNFS, or other dedicated QS/NFS implementations on RSA
 challenge numbers.
 
-See [docs/factorization-logic.md](docs/factorization-logic.md) for the full
-factorization pipeline.
-See [docs/publishing.md](docs/publishing.md) for the release checklist.
+See the
+[factorization logic guide](https://github.com/nikiigo/fast-factorization/blob/main/docs/factorization-logic.md)
+for the full factorization pipeline.
+See the
+[publishing checklist](https://github.com/nikiigo/fast-factorization/blob/main/docs/publishing.md)
+for the release process.
 
 ## API
 
