@@ -64,6 +64,9 @@ python -m fast_factorization --rho-attempts 200 --rho-max-steps 1000000 10000015
 python -m fast_factorization --rho-attempts 0 10000015400005913
 ```
 
+Default limits are documented in
+[docs/factorization-logic.md](docs/factorization-logic.md#default-limits).
+
 ## Tests
 
 ```bash

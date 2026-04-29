@@ -25,6 +25,21 @@ If no factorization is found, `factorize()` returns `None`.
 7. Try Pollard p-1 for p-1-smooth factors.
 8. Try Brent-style Pollard Rho for general medium composites.
 
+## Default Limits
+
+The public API and CLI use the same defaults unless an option is supplied:
+
+| Step | Default | Disable or change |
+| --- | ---: | --- |
+| Multiprocessing | `processes=1` | `--processes N` |
+| Trial division | primes up to `10_000` | fixed internal limit |
+| Miller-Rabin below `2**64` | deterministic witnesses | fixed internal witness sets |
+| Miller-Rabin above `2**64` | fixed probable-prime witness set | fixed internal witness set |
+| Fermat | `min(100_000, max(1_000, isqrt(isqrt(n))))` | `--fermat-steps N`; `0` disables |
+| Pollard p-1 | `10_000` smoothness bound | `--pm1-bound N`; `0` disables; max `1_000_000` |
+| Pollard Rho attempts | `100` attempts | `--rho-attempts N`; `0` means unlimited |
+| Pollard Rho steps | `1_000_000` polynomial steps per attempt | `--rho-max-steps N` |
+
 ## Stage Details
 
 ### Invalid, Prime, and Even Inputs
@@ -60,7 +75,8 @@ If `n` is a square composite, the result is:
 ### Trial Division
 
 The package precomputes primes up to `10_000` at import time and tests whether
-any of them divide `n`.
+any of them divide `n`. This is a fixed internal limit and is not exposed as a
+CLI option.
 
 This cheaply handles numbers with small factors and avoids heavier algorithms
 when the answer is easy.
@@ -89,6 +105,9 @@ The default number of Fermat steps is adaptive:
 ```python
 min(100_000, max(1_000, isqrt(isqrt(n))))
 ```
+
+This means Fermat tries at least `1_000` iterations, at most `100_000`
+iterations, and scales between those limits based on the size of `n`.
 
 CLI tuning:
 
@@ -129,6 +148,9 @@ f(x) = x*x + c mod n
 Different attempts vary the starting value and constant. The implementation
 batches GCD checks to reduce overhead.
 
+The default retry budget is `100` attempts. Each attempt may run up to
+`1_000_000` polynomial steps.
+
 CLI tuning:
 
 ```bash
@@ -148,6 +170,9 @@ python -m fast_factorization --processes 4 N
 
 Fast-path stages run once before workers are started. Workers are only used for
 the Pollard Rho stage.
+
+The default is `--processes 1`. When more than one process is requested, the
+worker count is capped at the machine CPU count.
 
 If multiprocessing is unavailable in the environment, the CLI logs a warning
 and falls back to one process.
