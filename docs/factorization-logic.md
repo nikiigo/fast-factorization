@@ -183,6 +183,12 @@ python -m fast_factorization --processes 4 --strategy methods N
 In that mode, workers may run Fermat, Pollard p-1, and Pollard Rho at the same
 time. The first valid non-trivial factor wins and the other workers are stopped.
 
+The `methods` strategy is experimental. It can be slower on small and
+medium-sized numbers because starting worker processes costs more than the
+factorization work itself. It is intended for harder searches where the fallback
+methods are expected to run long enough for parallel racing to pay for that
+overhead.
+
 The default is `--processes 1`. When more than one process is requested, the
 worker count is capped at the machine CPU count.
 
