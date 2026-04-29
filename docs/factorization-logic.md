@@ -32,6 +32,7 @@ The public API and CLI use the same defaults unless an option is supplied:
 
 | Step | Default | Disable or change |
 | --- | ---: | --- |
+| Parallel strategy | `rho` | `--strategy methods` |
 | Multiprocessing | `processes=1` | `--processes N` |
 | Trial division | primes up to `10_000` | fixed internal limit |
 | Miller-Rabin below `2**64` | deterministic witnesses | fixed internal witness sets |
@@ -169,14 +170,24 @@ The CLI can run Pollard Rho attempts across multiple worker processes:
 python -m fast_factorization --processes 4 N
 ```
 
-Fast-path stages run once before workers are started. Workers are only used for
-the Pollard Rho stage.
+With the default `rho` strategy, fast-path stages run once before workers are
+started. Workers are only used for the Pollard Rho stage.
+
+The optional `methods` strategy still runs cheap deterministic checks once, then
+races expensive fallback methods:
+
+```bash
+python -m fast_factorization --processes 4 --strategy methods N
+```
+
+In that mode, workers may run Fermat, Pollard p-1, and Pollard Rho at the same
+time. The first valid non-trivial factor wins and the other workers are stopped.
 
 The default is `--processes 1`. When more than one process is requested, the
 worker count is capped at the machine CPU count.
 
-If multiprocessing is unavailable in the environment, the CLI logs a warning
-and falls back to one process.
+If multiprocessing is unavailable in the environment, the CLI logs a warning and
+falls back to one process.
 
 ## Return Semantics
 

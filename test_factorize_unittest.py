@@ -102,6 +102,41 @@ class TestFactorize(unittest.TestCase):
     def test_public_factorize_uses_parallel_path(self):
         self.assertEqual(factorize.factorize(100, processes=2), (2, 2, 5, 5))
 
+    def test_factorize_methods_strategy_uses_fast_paths(self):
+        self.assertEqual(factorize.factorize(91, strategy="methods"), (7, 13))
+        self.assertEqual(
+            factorize.factorize(100, processes=2, strategy="methods"),
+            (2, 2, 5, 5),
+        )
+
+    def test_factorize_rejects_unknown_strategy(self):
+        with self.assertRaises(ValueError):
+            factorize.factorize(91, strategy="unknown")
+
+    def test_parallel_method_worker_dispatches_methods(self):
+        close_number = 100000073 * 100000081
+        self.assertEqual(
+            factorize._method_worker(("fermat", close_number, None)),
+            100000073,
+        )
+        self.assertEqual(
+            factorize._method_worker(("pm1", 20_123 * 1_000_000_007, 10_061)),
+            20_123,
+        )
+        self.assertEqual(
+            factorize._method_worker(
+                (
+                    "rho",
+                    challenge_numbers.PRACTICAL_RHO_SEMIPRIME,
+                    1,
+                    0,
+                    factorize.POLLARD_RHO_MAX_ATTEMPTS,
+                    factorize.POLLARD_RHO_MAX_STEPS,
+                )
+            ),
+            challenge_numbers.PRACTICAL_RHO_LEFT,
+        )
+
     def test_top_level_package_exports_current_api(self):
         self.assertEqual(fast_factorization.factorize(100), (2, 2, 5, 5))
         self.assertEqual(fast_factorization.factor_pair(100), (2, 50))

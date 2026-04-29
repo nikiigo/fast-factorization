@@ -44,6 +44,13 @@ Use multiple workers when a factor is not found quickly:
 python -m fast_factorization --processes 4 10000015400005913
 ```
 
+By default, multiple workers split Pollard Rho attempts after the earlier stages
+run sequentially. To race expensive fallback methods after cheap checks fail:
+
+```bash
+python -m fast_factorization --processes 4 --strategy methods 10000015400005913
+```
+
 Limit or disable the Fermat close-factor pre-pass:
 
 ```bash
@@ -149,7 +156,8 @@ With the optional `gmpy2` backend installed:
 | prime input | 0.0101 ms | 0.0186 ms | fast-factorization faster |
 | big close semiprime | 0.5950 ms | 0.1917 ms | SymPy faster |
 
-With the optional `gmpy2` backend and `processes=4`:
+With the optional `gmpy2` backend and `processes=4` using the default `rho`
+strategy:
 
 | Case | fast-factorization `processes=4` | SymPy `factorint` | Result |
 | --- | ---: | ---: | --- |
@@ -166,8 +174,9 @@ With the optional `gmpy2` backend and `processes=4`:
 This package is competitive on simple educational cases such as small factors,
 perfect squares, and prime screening. SymPy is much stronger for general-purpose
 integer factorization, especially Pollard-heavy cases. The `processes` option
-only parallelizes the Pollard Rho stage, so it can be slower on small examples
-where multiprocessing startup overhead dominates the actual factorization work.
+uses the default `rho` strategy unless `--strategy methods` is supplied. For
+small examples, multiprocessing startup overhead can dominate the actual
+factorization work.
 
 ## Practice Numbers
 

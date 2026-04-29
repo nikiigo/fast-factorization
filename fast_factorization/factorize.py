@@ -342,6 +342,7 @@ def _factorize_fast_paths(
     num: int,
     fermat_steps: int | None = None,
     pm1_bound: int = POLLARD_PM1_BOUND,
+    use_expensive_methods: bool = True,
 ):
     if num < 2:
         return True, None
@@ -360,6 +361,9 @@ def _factorize_fast_paths(
 
     if is_prime(num):
         return True, None
+
+    if not use_expensive_methods:
+        return False, None
 
     fermat_factor = _fermat_factor(num, max_steps=fermat_steps)
     if fermat_factor is not None:
@@ -380,12 +384,25 @@ def factor_pair(
     pm1_bound: int = POLLARD_PM1_BOUND,
     rho_attempts: int = POLLARD_RHO_MAX_ATTEMPTS,
     rho_max_steps: int = POLLARD_RHO_MAX_STEPS,
+    strategy: str = "rho",
 ):
     """Return two non-trivial factors of num, or None.
 
     None means the input is invalid, prime/probable-prime, or no factor was
     found within the configured search limits.
     """
+    if strategy not in ("rho", "methods"):
+        raise ValueError("strategy must be 'rho' or 'methods'")
+    if strategy == "methods" and processes > 1:
+        return _factorize_parallel_methods(
+            num,
+            processes,
+            fermat_steps=fermat_steps,
+            pm1_bound=pm1_bound,
+            rho_attempts=rho_attempts,
+            rho_max_steps=rho_max_steps,
+        )
+
     handled, result = _factorize_fast_paths(
         num,
         fermat_steps=fermat_steps,
@@ -437,6 +454,7 @@ def factorize(
     pm1_bound: int = POLLARD_PM1_BOUND,
     rho_attempts: int = POLLARD_RHO_MAX_ATTEMPTS,
     rho_max_steps: int = POLLARD_RHO_MAX_STEPS,
+    strategy: str = "rho",
 ):
     """Return a sorted tuple of recursively discovered factors, or None.
 
@@ -450,6 +468,7 @@ def factorize(
         "pm1_bound": pm1_bound,
         "rho_attempts": rho_attempts,
         "rho_max_steps": rho_max_steps,
+        "strategy": strategy,
     }
     if processes > 1:
         return _factorize_parallel_recursive(
@@ -459,12 +478,33 @@ def factorize(
             pm1_bound=pm1_bound,
             rho_attempts=rho_attempts,
             rho_max_steps=rho_max_steps,
+            strategy=strategy,
         )
     return _factorize_recursive(num, kwargs)
 
 
 def _pollard_worker(args):
     return _find_factor(*args)
+
+
+def _method_worker(args):
+    method = args[0]
+    if method == "fermat":
+        _, num, fermat_steps = args
+        return _fermat_factor(num, max_steps=fermat_steps)
+    if method == "pm1":
+        _, num, pm1_bound = args
+        return _pollard_pm1(num, bound=pm1_bound)
+    if method == "rho":
+        _, num, processes, proc_id, rho_attempts, rho_max_steps = args
+        return _find_factor(
+            num,
+            processes=processes,
+            proc_id=proc_id,
+            rho_attempts=rho_attempts,
+            rho_max_steps=rho_max_steps,
+        )
+    raise ValueError(f"unknown factorization method: {method}")
 
 
 def _parse_args(argv):
@@ -485,6 +525,12 @@ def _parse_args(argv):
         "--verbose",
         action="store_true",
         help="enable debug logging",
+    )
+    parser.add_argument(
+        "--strategy",
+        choices=("rho", "methods"),
+        default="rho",
+        help="parallel strategy for expensive methods when --processes is greater than 1",
     )
     parser.add_argument(
         "--fermat-steps",
@@ -520,7 +566,20 @@ def _factorize_parallel(
     pm1_bound: int = POLLARD_PM1_BOUND,
     rho_attempts: int = POLLARD_RHO_MAX_ATTEMPTS,
     rho_max_steps: int = POLLARD_RHO_MAX_STEPS,
+    strategy: str = "rho",
 ):
+    if strategy == "methods":
+        return _factorize_parallel_methods(
+            num,
+            processes,
+            fermat_steps=fermat_steps,
+            pm1_bound=pm1_bound,
+            rho_attempts=rho_attempts,
+            rho_max_steps=rho_max_steps,
+        )
+    if strategy != "rho":
+        raise ValueError("strategy must be 'rho' or 'methods'")
+
     if processes <= 1:
         return factor_pair(
             num,
@@ -564,6 +623,66 @@ def _factorize_parallel(
     return None
 
 
+def _factorize_parallel_methods(
+    num: int,
+    processes: int,
+    fermat_steps: int | None = None,
+    pm1_bound: int = POLLARD_PM1_BOUND,
+    rho_attempts: int = POLLARD_RHO_MAX_ATTEMPTS,
+    rho_max_steps: int = POLLARD_RHO_MAX_STEPS,
+):
+    if processes <= 1:
+        return factor_pair(
+            num,
+            fermat_steps=fermat_steps,
+            pm1_bound=pm1_bound,
+            rho_attempts=rho_attempts,
+            rho_max_steps=rho_max_steps,
+        )
+
+    handled, result = _factorize_fast_paths(
+        num,
+        fermat_steps=fermat_steps,
+        pm1_bound=pm1_bound,
+        use_expensive_methods=False,
+    )
+    if handled:
+        return result
+
+    worker_count = min(processes, os.cpu_count() or 1)
+    tasks = []
+    if fermat_steps != 0:
+        tasks.append(("fermat", num, fermat_steps))
+    if pm1_bound >= 2:
+        tasks.append(("pm1", num, pm1_bound))
+
+    rho_worker_count = max(1, worker_count - len(tasks))
+    worker_attempts = rho_attempts
+    if rho_attempts > 0:
+        worker_attempts = math.ceil(rho_attempts / rho_worker_count)
+    for proc_id in range(rho_worker_count):
+        tasks.append(
+            ("rho", num, rho_worker_count, proc_id, worker_attempts, rho_max_steps)
+        )
+
+    try:
+        with Pool(min(worker_count, len(tasks))) as pool:
+            for divisor in pool.imap_unordered(_method_worker, tasks):
+                if divisor not in (None, 1, num):
+                    pool.terminate()
+                    return _sorted_factor_pair(num, divisor)
+    except OSError as exc:
+        LOGGER.warning("multiprocessing unavailable: %s; falling back to one process", exc)
+        return factor_pair(
+            num,
+            fermat_steps=fermat_steps,
+            pm1_bound=pm1_bound,
+            rho_attempts=rho_attempts,
+            rho_max_steps=rho_max_steps,
+        )
+    return None
+
+
 def _factorize_parallel_recursive(
     num: int,
     processes: int,
@@ -571,6 +690,7 @@ def _factorize_parallel_recursive(
     pm1_bound: int = POLLARD_PM1_BOUND,
     rho_attempts: int = POLLARD_RHO_MAX_ATTEMPTS,
     rho_max_steps: int = POLLARD_RHO_MAX_STEPS,
+    strategy: str = "rho",
 ):
     if num < 2:
         return None
@@ -584,6 +704,7 @@ def _factorize_parallel_recursive(
         pm1_bound=pm1_bound,
         rho_attempts=rho_attempts,
         rho_max_steps=rho_max_steps,
+        strategy=strategy,
     )
     if pair is None:
         return None
@@ -600,6 +721,7 @@ def _factorize_parallel_recursive(
             pm1_bound=pm1_bound,
             rho_attempts=rho_attempts,
             rho_max_steps=rho_max_steps,
+            strategy=strategy,
         )
         if subfactors is None:
             return None
@@ -644,6 +766,7 @@ def main(argv=None):
         args.pm1_bound,
         args.rho_attempts,
         args.rho_max_steps,
+        args.strategy,
     )
     elapsed = time.time() - started_at
 
