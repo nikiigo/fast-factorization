@@ -1,35 +1,94 @@
-import math
-import sympy.ntheory as nt
+import argparse
 import logging
+import math
+import os
 import sys
-from multiprocessing import current_process
+import time
+from multiprocessing import Pool
+
+try:
+    import gmpy2
+except ImportError:
+    gmpy2 = None
+
+
+LOGGER = logging.getLogger(__name__)
+SMALL_PRIMES = (
+    2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37,
+)
+TRIAL_DIVISION_LIMIT = 10_000
+FERMAT_MAX_STEPS = 100_000
+POLLARD_PM1_BOUND = 10_000
+MILLER_RABIN_WITNESSES_SMALL = (2, 3, 5, 7, 11, 13, 17)
+MILLER_RABIN_WITNESSES_64 = (2, 325, 9375, 28178, 450775, 9780504, 1795265022)
+
+
+def _generate_primes(limit: int):
+    sieve = bytearray(b"\x01") * (limit + 1)
+    sieve[0:2] = b"\x00\x00"
+    for candidate in range(2, math.isqrt(limit) + 1):
+        if sieve[candidate]:
+            start = candidate * candidate
+            step_count = ((limit - start) // candidate) + 1
+            sieve[start:limit + 1:candidate] = b"\x00" * step_count
+    return tuple(index for index, is_prime_candidate in enumerate(sieve) if is_prime_candidate)
+
+
+TRIAL_PRIMES = _generate_primes(TRIAL_DIVISION_LIMIT)
+
+
+def _gcd(left: int, right: int):
+    if gmpy2 is not None:
+        return int(gmpy2.gcd(left, right))
+    return math.gcd(left, right)
+
+
+def _isqrt(num: int):
+    if gmpy2 is not None:
+        return int(gmpy2.isqrt(num))
+    return math.isqrt(num)
+
+
+def _is_square(num: int):
+    if gmpy2 is not None:
+        return bool(gmpy2.is_square(num))
+    root = math.isqrt(num)
+    return root * root == num
+
+
+def _pow_mod(base: int, exp: int, mod: int):
+    if gmpy2 is not None:
+        return int(gmpy2.powmod(base, exp, mod))
+    return pow(base, exp, mod)
 
 
 def digit_root(n: int):
-    return (n - 1) % 9 + 1
+    if n == 0:
+        return 0
+    return (abs(n) - 1) % 9 + 1
 
 
 def last_digits(num: int, dig: int):
+    if dig < 1:
+        raise ValueError("dig must be greater than 0")
     try:
-        my_dig = int(str(num)[-dig])
-        return my_dig
+        return int(str(abs(num))[-dig])
     except IndexError:
         return None
 
 
 def is_even(num: int):
-    if (num % 2) == 0:
-        return True
-    else:
-        return False
+    return num % 2 == 0
 
 
 def jacobi(a: int, n: int):
-    assert (n > a > 0 and n % 2 == 1)
+    if not (n > a > 0 and n % 2 == 1):
+        raise ValueError("jacobi requires n > a > 0 and odd n")
+
     t = 1
     while a != 0:
         while a % 2 == 0:
-            a /= 2
+            a //= 2
             r = n % 8
             if r == 3 or r == 5:
                 t = -t
@@ -39,169 +98,345 @@ def jacobi(a: int, n: int):
         a %= n
     if n == 1:
         return t
-    else:
-        return 0
+    return 0
 
 
 def is_perfect_square(num: int):
-    logger = logging.getLogger('PerfectSquare')
-    logger.debug(f'Check if the {num} is perfect square')
-    last_dig = last_digits(num, 1)
-    last_2dig = last_digits(num, 2)
-    last_3dig = last_digits(num, 3)
-    last_4dig = last_digits(num, 4)
-    logger.debug(f'last digits are:'
-                 f'{str(last_dig), str(last_2dig), str(last_3dig), str(last_4dig)}')
-    logger.debug(f'Check if the {num} is perfect square by last numbers')
-    if last_dig not in (0, 1, 4, 5, 6, 9):
+    if num < 0:
         return 0
-    if last_dig == 5:
-        if last_2dig is not None and last_2dig == 2:
-            if last_3dig is not None and last_3dig not in (0, 2, 6):
-                return 0
-            if last_3dig is not None and last_3dig == 6:
-                if last_4dig is not None and last_4dig not in (0, 5):
-                    return 0
-    elif last_dig == 6:
-        if last_2dig is not None and is_even(last_2dig):
-            return 0
-    elif last_dig in (1, 9):
-        if last_2dig is not None and not is_even(last_2dig):
-            return 0
-        if last_2dig is not None and last_2dig in (2, 6):
-            if last_3dig is not None and is_even(last_3dig):
-                return 0
-        elif last_2dig is not None and last_2dig in (0, 4, 8):
-            if last_3dig is not None and not is_even(last_3dig):
-                return 0
-    elif last_dig == 4:
-        if last_2dig is not None and not is_even(last_2dig):
-            return 0
-    if digit_root(num) not in (0, 1, 4, 7, 9):
-        return 0
-    for i in (97, 179, 257, 683, 1427, 2399, 3547, 6971, 7919):
-        logger.debug(f'Check if the {num} is perfect square by legendre symbol for {i}')
-        if nt.legendre_symbol(num, i) == -1:
-            return 0
-    logger.debug(f'Calculate square root of {num}')
-    num_sqrt = math.isqrt(num)
-    if num_sqrt * num_sqrt == num:
-        logger.debug(f'Calculated square root of {num} = {num_sqrt} it is num_sqrt')
-        return num_sqrt
-    else:
-        return 0
+    if _is_square(num):
+        return _isqrt(num)
+    return 0
 
 
-def factorize(num: int, processes=1, proc_id=0):
-    if current_process().name != 'MainProcess':
-        logger = logging.getLogger('Factorization:' + str(proc_id))
-        logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+def is_prime(num: int):
+    """Deterministic Miller-Rabin for numbers below 2**64."""
+    if num < 2:
+        return False
+
+    for prime in SMALL_PRIMES:
+        if num == prime:
+            return True
+        if num % prime == 0:
+            return False
+
+    d = num - 1
+    s = 0
+    while d % 2 == 0:
+        s += 1
+        d //= 2
+
+    if num < 341_550_071_728_321:
+        witnesses = MILLER_RABIN_WITNESSES_SMALL
+    elif num < 2**64:
+        witnesses = MILLER_RABIN_WITNESSES_64
     else:
-        logger = logging.getLogger()
-    """logging.debug(f's = {num}')
-    s2 = pow(num, 2)
-    logging.debug(f's2 = {s2}')
-    s4 = pow(s2, 2)
-    logging.debug(f's4 = {s4}')
-    n_max = math.floor(s2 / (120 * math.isqrt(3)))
-    n_min = num // 30 * math.isqrt(num)
-    n = n_min
-    logging.info(f'n_min = {n}, m_max {n_max}')
-    q4 = s2
-    while n < n_max:
-        sqrt1 = is_perfect_square(pow(120 * n, 2) + s4)
-        logging.debug(f'Iteration number = {n} of {n_max}')
-        logging.debug(f'sqrt1 = sqrt({pow(120 * n, 2) + s4})')
-        logging.debug(f'q4 = {q4}')
-        if not sqrt1:
-            logging.debug(f'{pow(120 * n, 2) + s4} is not perfect square')
-            n += 1
+        witnesses = (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37)
+
+    for witness in witnesses:
+        if witness >= num:
             continue
-        else:
-            logging.debug(f'sqrt1 = {sqrt1}')
-            logging.info(f'Iteration number = {n} of {n_max}')
-            q4 = sqrt1 - 120 * n
-            q2 = is_perfect_square(q4)
-            if q2:
-                logging.debug(f'q2 = {q2}')
-                logging.info(f'Iteration number = {n} of {n_max}')
-                q = is_perfect_square(q2)
-                if q:
-                    logging.debug(f'q= {q}')
-                    logging.info(f'Iteration number = {n} of {n_max}')
-                    if not num % q:
-                        return q, int(num / q)
-                    else:
-                        n += 1
-                        continue
-                else:
-                    logging.debug(f'{q4} is not perfect square')
-                    n += 1
-                    continue
-            else:
-                logging.debug(f'{q2} is not perfect square')
-                n += 1
-                continue
-    return num, 1"""
-    s = num
-    s4 = math.isqrt(math.isqrt(s))
-    n_max = math.floor(s4 / processes * (proc_id + 1))
-    n_min = 1 + math.floor(s4 / processes * proc_id)
-    n = n_max
-    logger.info(f'n_min = {n_min}, m_max {n_max}')
-    while n >= n_min:
-        sqrt1 = is_perfect_square(pow(n, 2) + s)
-        logger.debug(f'Iteration number = {n_max + n_min - n} of {n_max}')
-        logger.debug(f'sqrt1 = sqrt({pow(n, 2) + s})')
-        if not sqrt1:
-            logger.debug(f'{pow(n, 2) + s} is not perfect square')
-            n += -1
+        x = _pow_mod(witness, d, num)
+        if x == 1 or x == num - 1:
             continue
+        for _ in range(s - 1):
+            x = _pow_mod(x, 2, num)
+            if x == num - 1:
+                break
         else:
-            logger.debug(f'sqrt1 = {sqrt1}')
-            logger.info(f'Iteration number = {n_max + n_min - n} of {n_max}')
-            q = sqrt1 - n
-            pmod = s % q
-            if pmod:
-                logger.debug(f'q = {q}')
-                logger.debug(f'Iteration number = {n_max + n_min - n} of {n_max}')
-                n += -1
-                continue
-            else:
-                logger.debug(f'Iteration number = {n_max + n_min - n} of {n_max}')
-                return q, int(s / q)
+            return False
+    return True
+
+
+def _trial_division(num: int):
+    for prime in TRIAL_PRIMES:
+        if prime * prime > num:
+            break
+        if num % prime == 0:
+            return prime
     return None
 
 
-def main(argv: list):
-    import multiprocessing as mp
-    import time
-    if len(argv) == 2:
-        st = time.time()
-        cpu_to_use = 6
-        # start the process pool
-        prc = mp.Pool(cpu_to_use)
-        # submit tasks and collect results
-        args = [(int(argv[1]), cpu_to_use, i) for i in range(cpu_to_use)]
-        prc_results = prc.starmap(factorize, args)
-        prc.close()
-        prc.join()
-        # Combine results
-        results = ()
-        for result in prc_results:
-            if result is not None:
-                results = results + result
-        et = time.time() - st
-        time_format = time.strftime("%H:%M:%S", time.gmtime(et))
-        print(f'Prime numbers are: {results} ')
-        print("Elapsed time hh:mm:ss", time_format)
-        sys.exit(0)
-    else:
-        print(f'Usage: {argv[0]} number')
-        sys.exit(-1)
+def _default_fermat_steps(num: int):
+    return min(FERMAT_MAX_STEPS, max(1_000, _isqrt(_isqrt(num))))
 
 
-if __name__ != "__main__":
-    pass
-else:
-    main(sys.argv)
+def _fermat_factor(num: int, max_steps: int | None = None):
+    if num % 2 == 0:
+        return 2
+    if max_steps is None:
+        max_steps = _default_fermat_steps(num)
+    if max_steps <= 0:
+        return None
+
+    a = _isqrt(num)
+    if a * a < num:
+        a += 1
+    b_squared = a * a - num
+
+    for _ in range(max_steps):
+        b = is_perfect_square(b_squared)
+        if b:
+            factor = a - b
+            if 1 < factor < num and num % factor == 0:
+                return factor
+        b_squared += 2 * a + 1
+        a += 1
+    return None
+
+
+def _pollard_pm1(num: int, bound: int = POLLARD_PM1_BOUND, base: int = 2):
+    if bound < 2:
+        return None
+    if num % 2 == 0:
+        return 2
+
+    a = base % num
+    for prime in TRIAL_PRIMES:
+        if prime > bound:
+            break
+        power = prime
+        while power * prime <= bound:
+            power *= prime
+        a = _pow_mod(a, power, num)
+
+    divisor = _gcd(a - 1, num)
+    if divisor in (1, num):
+        return None
+    return divisor
+
+
+def _pollard_rho(
+    num: int,
+    start: int = 2,
+    constant: int = 1,
+    batch_size: int = 128,
+    max_steps: int = 1_000_000,
+):
+    if num % 2 == 0:
+        return 2
+    if num % 3 == 0:
+        return 3
+
+    def polynomial(value):
+        return (_pow_mod(value, 2, num) + constant) % num
+
+    y = start % num
+    r = 1
+    q = 1
+    divisor = 1
+    steps = 0
+
+    while divisor == 1 and steps < max_steps:
+        x = y
+        for _ in range(r):
+            y = polynomial(y)
+            steps += 1
+
+        k = 0
+        while k < r and divisor == 1:
+            ys = y
+            for _ in range(min(batch_size, r - k)):
+                y = polynomial(y)
+                q = (q * abs(x - y)) % num
+                steps += 1
+            divisor = _gcd(q, num)
+            k += batch_size
+        r *= 2
+
+    if divisor == num and "ys" in locals():
+        divisor = 1
+        while divisor == 1 and steps < max_steps * 2:
+            ys = polynomial(ys)
+            divisor = _gcd(abs(x - ys), num)
+            steps += 1
+
+    if divisor in (1, num):
+        return None
+    return divisor
+
+
+def _find_factor(num: int, processes: int = 1, proc_id: int = 0):
+    stride = max(1, processes)
+    attempt = proc_id
+    while True:
+        constant = 1 + attempt
+        start = 2 + attempt * 2
+        divisor = _pollard_rho(num, start=start, constant=constant)
+        if divisor is not None:
+            return divisor
+        attempt += stride
+
+
+def _sorted_factor_pair(num: int, divisor: int):
+    return tuple(sorted((divisor, num // divisor)))
+
+
+def _factorize_fast_paths(
+    num: int,
+    fermat_steps: int | None = None,
+    pm1_bound: int = POLLARD_PM1_BOUND,
+):
+    if num < 2:
+        return True, None
+    if num in (2, 3):
+        return True, None
+    if num % 2 == 0:
+        return True, (2, num // 2)
+
+    square_root = is_perfect_square(num)
+    if square_root and square_root > 1:
+        return True, (square_root, square_root)
+
+    trial_factor = _trial_division(num)
+    if trial_factor is not None:
+        return True, (trial_factor, num // trial_factor)
+
+    if is_prime(num):
+        return True, None
+
+    fermat_factor = _fermat_factor(num, max_steps=fermat_steps)
+    if fermat_factor is not None:
+        return True, _sorted_factor_pair(num, fermat_factor)
+
+    pm1_factor = _pollard_pm1(num, bound=pm1_bound)
+    if pm1_factor is not None:
+        return True, _sorted_factor_pair(num, pm1_factor)
+
+    return False, None
+
+
+def factorize(
+    num: int,
+    processes=1,
+    proc_id=0,
+    fermat_steps: int | None = None,
+    pm1_bound: int = POLLARD_PM1_BOUND,
+):
+    """Return two non-trivial factors of num, or None when num is prime/invalid."""
+    handled, result = _factorize_fast_paths(
+        num,
+        fermat_steps=fermat_steps,
+        pm1_bound=pm1_bound,
+    )
+    if handled:
+        return result
+
+    divisor = _find_factor(num, processes=processes, proc_id=proc_id)
+    if divisor in (None, 1, num):
+        return None
+
+    return _sorted_factor_pair(num, divisor)
+
+
+def _pollard_worker(args):
+    return _find_factor(*args)
+
+
+def _parse_args(argv):
+    parser = argparse.ArgumentParser(
+        prog=argv[0],
+        description="Factor a composite integer into two non-trivial factors.",
+    )
+    parser.add_argument("number", type=int)
+    parser.add_argument(
+        "-p",
+        "--processes",
+        type=int,
+        default=1,
+        help="number of worker processes to try in parallel",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="enable debug logging",
+    )
+    parser.add_argument(
+        "--fermat-steps",
+        type=int,
+        default=None,
+        help="maximum Fermat iterations before Pollard Rho",
+    )
+    parser.add_argument(
+        "--pm1-bound",
+        type=int,
+        default=POLLARD_PM1_BOUND,
+        help="smoothness bound for Pollard p-1; use 0 to disable",
+    )
+    return parser.parse_args(argv[1:])
+
+
+def _factorize_parallel(
+    num: int,
+    processes: int,
+    fermat_steps: int | None = None,
+    pm1_bound: int = POLLARD_PM1_BOUND,
+):
+    if processes <= 1:
+        return factorize(num, fermat_steps=fermat_steps, pm1_bound=pm1_bound)
+
+    handled, result = _factorize_fast_paths(
+        num,
+        fermat_steps=fermat_steps,
+        pm1_bound=pm1_bound,
+    )
+    if handled:
+        return result
+
+    worker_count = min(processes, os.cpu_count() or 1)
+    args = [(num, worker_count, proc_id) for proc_id in range(worker_count)]
+    try:
+        with Pool(worker_count) as pool:
+            for divisor in pool.imap_unordered(_pollard_worker, args):
+                if divisor not in (None, 1, num):
+                    pool.terminate()
+                    return _sorted_factor_pair(num, divisor)
+    except OSError as exc:
+        LOGGER.warning("multiprocessing unavailable: %s; falling back to one process", exc)
+        return factorize(num, fermat_steps=fermat_steps, pm1_bound=pm1_bound)
+    return None
+
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+
+    args = _parse_args(argv)
+    logging.basicConfig(
+        stream=sys.stderr,
+        level=logging.DEBUG if args.verbose else logging.WARNING,
+    )
+
+    if args.processes < 1:
+        print("--processes must be greater than 0", file=sys.stderr)
+        return 2
+    if args.fermat_steps is not None and args.fermat_steps < 0:
+        print("--fermat-steps must be greater than or equal to 0", file=sys.stderr)
+        return 2
+    if args.pm1_bound < 0:
+        print("--pm1-bound must be greater than or equal to 0", file=sys.stderr)
+        return 2
+
+    started_at = time.time()
+    result = _factorize_parallel(
+        args.number,
+        args.processes,
+        args.fermat_steps,
+        args.pm1_bound,
+    )
+    elapsed = time.time() - started_at
+
+    if result is None:
+        print(f"No non-trivial factor found for {args.number}")
+        return 1
+
+    left, right = result
+    print(f"Factors: {left} {right}")
+    print(f"Product check: {left * right}")
+    print("Elapsed time hh:mm:ss", time.strftime("%H:%M:%S", time.gmtime(elapsed)))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

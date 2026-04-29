@@ -1,2 +1,1 @@
-mpmath>=1.3.0,<2
-sympy>=1.11.1,<2
+# Runtime dependencies: none.
